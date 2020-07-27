@@ -90,7 +90,7 @@ class envGenWindow(QtWidgets.QWidget):
 
 
     def polyItemClicked(self):
-        print "clicked"
+        pass
 
     def setContextMenu(self, item):
         polyItem_label.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -135,31 +135,49 @@ class envGenWindow(QtWidgets.QWidget):
             
             if len(sel) > 0:
                 basePoly = sel[0]
-                polyItem = QtWidgets.QTreeWidgetItem()
-                polyItem_label = self.TreeLabel(sel[0])
+                row = QtWidgets.QTreeWidgetItem()
+                polyItem_label = self.TreeLabel(sel[0],row)
 
-                self.insertTopLevelItem(0,polyItem)
-                self.setItemWidget(polyItem,0,polyItem_label)
+                self.insertTopLevelItem(0,row)
+                self.setItemWidget(row,0,polyItem_label)
+
+                segmants = envGen.segmants.getSegmants(basePoly,1)
+                cmds.drawSegmants(basePoly,1)
+
                 
             else:
                 "Nothing Selected"
 
         
         class TreeLabel(QtWidgets.QLabel):
-            def __init__(self, text = None):
+            def __init__(self, text, row):
                 QtWidgets.QLabel.__init__(self, text)
-            
 
+                self.row = row
+                
             def contextMenuEvent(self, event):
                 contextMenu = QtWidgets.QMenu(self)
-                newAction = QtWidgets.QAction('Add Item', self)
-                contextMenu.addAction(newAction)
-                #newAction.triggered.connect(self.selectBasePoly)
+                add_action = QtWidgets.QAction('Add Selected Item', self)
+                contextMenu.addAction(add_action)
+                add_action.triggered.connect(self.addItem)
 
 
                 action = contextMenu.exec_(self.mapToGlobal(event.pos()))
-                
 
+            def addItem(self):
+                sel = cmds.ls(selection = True)
+                
+                if len(sel) > 0:
+                    basePoly = sel[0]
+                    newRow = QtWidgets.QTreeWidgetItem()
+                    polyItem_label = self.row.treeWidget().TreeLabel(sel[0],newRow)
+                    self.row.addChild(newRow)
+                    self.row.treeWidget().setItemWidget(newRow,0,polyItem_label)
+                    
+                    
+                else:
+                    "Nothing Selected"
+                
 
 
 
