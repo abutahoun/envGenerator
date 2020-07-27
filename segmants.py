@@ -11,9 +11,7 @@ import cnt
 def getSegmants(poly,segmantSize):
     # get edges segmants
 
-    print "getSegmants"
-    
-    print poly
+  
     tri = cmds.duplicate(poly)
 
     cmds.polyTriangulate(tri)
@@ -39,10 +37,10 @@ def getSegmants(poly,segmantSize):
         normals = []
 
         #get normals for edgeFaces
-        for i in range(2):
-            face = '%s.f[%s]'%(tri[0],i)
+        for fId in faceIdArray:
+            face = '%s.f[%s]'%(tri[0],fId)
             facefv = cmds.polyInfo(face,fv=1)
-            normals.append(getNormal(face,tri))
+            normals.append(getNormalFromFace(face,tri))
 
         #normal average
         normal = [ (normals[0][0] + normals[1][0]) / 2 ,
@@ -57,8 +55,6 @@ def getSegmants(poly,segmantSize):
         
         vertsList = getVerts(verts,tri) 
         
-        print vertsList
-
         
         line = Line(vertsList[0],vertsList[1])
         size = int(line.length/segmantSize)
@@ -79,13 +75,10 @@ def getSegmants(poly,segmantSize):
         #create array for face verts
         vertsList = getVerts(verts,tri) 
 
-        normal = getNormal2(vertsList)
+        normal = getNormalFromVerts(vertsList)
         
         for s in getFaceSegmants(vertsList,segmantSize):
             segmantList.append(Segmant(s, normal))
-
-    
-    #numpy.random.shuffle(segmantList)
             
 
     # delete tringualted Poly
@@ -95,10 +88,6 @@ def getSegmants(poly,segmantSize):
         
     cmds.delete(tri) 
     
-    # for segmant in segmantList:
-    #     mesh = cmds.duplicate('pCylinder1')[0]
-    #     cmds.move(segmant.location[0],segmant.location[1],segmant.location[2],mesh,ws = 1,rpr=1)
-
 
     return segmantList
 
@@ -112,7 +101,8 @@ def getVerts(verts,poly):
     return vertsList
 
 
-def getNormal(face,tri):
+def getNormalFromFace(face,tri):
+    #Return normal of a face
     # creates 2 vectors from verts and retrun cross product
 
     facefv = cmds.polyInfo(face,fv=1)
@@ -128,7 +118,7 @@ def getNormal(face,tri):
     w = vert3 - vert1
     
     cp = numpy.cross(v,w)
-    #cp = numpy.cross(cp,[0,1,0])
+  
 
 
     n  = numpy.array(cp)
@@ -143,7 +133,8 @@ def getNormal(face,tri):
     return [x,y,z,0]
 
 
-def getNormal2(vertsList):
+def getNormalFromVerts(vertsList):
+    # Return Normal from face verts
     # creates 2 vectors from verts and retrun cross product
 
 
@@ -158,7 +149,6 @@ def getNormal2(vertsList):
     w = vert3 - vert1
     
     cp = numpy.cross(v,w)
-    #cp = numpy.cross(cp,[0,1,0])
 
 
     n  = numpy.array(cp)
