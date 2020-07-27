@@ -8,22 +8,22 @@ import cnt
 
 
 
-def getSegmants(poly,segmantSize):
-    # get edges segmants
+def getsegments(poly,segmentSize):
+    # get edges segments
 
   
     tri = cmds.duplicate(poly)
 
     cmds.polyTriangulate(tri)
     
-    segmantList =[]
-    segmantsDict = {}
+    segmentList =[]
+    segmentsDict = {}
 
     ignoreEdge = []
 
     
 
-    #create segmants for edges
+    #create segments for edges
     for i in range (cmds.polyEvaluate(tri,e=1)):
         edge = '%s.e[%s]'%(tri[0],i)
         edgeFace = cmds.polyListComponentConversion(edge,fe=True,tf=True)[0]
@@ -57,15 +57,15 @@ def getSegmants(poly,segmantSize):
         
         
         line = Line(vertsList[0],vertsList[1])
-        size = int(line.length/segmantSize)
+        size = int(line.length/segmentSize)
 
 
 
-        for s in getLineSegmants(line,size):
-            segmantList.append(Segmant(s, normal))
+        for s in getLinesegments(line,size):
+            segmentList.append(segment(s, normal))
 
     
-    #crete segmants for inner face without edges
+    #crete segments for inner face without edges
 
     for i in range(cmds.polyEvaluate(tri,f=1)):
         face = '%s.f[%s]'%(tri[0],i)
@@ -77,8 +77,8 @@ def getSegmants(poly,segmantSize):
 
         normal = getNormalFromVerts(vertsList)
         
-        for s in getFaceSegmants(vertsList,segmantSize):
-            segmantList.append(Segmant(s, normal))
+        for s in getFacesegments(vertsList,segmentSize):
+            segmentList.append(segment(s, normal))
             
 
     # delete tringualted Poly
@@ -89,7 +89,7 @@ def getSegmants(poly,segmantSize):
     cmds.delete(tri) 
     
 
-    return segmantList
+    return segmentList
 
 
 def getVerts(verts,poly):
@@ -178,9 +178,9 @@ def getRotation(normal):
     
 
 
-def getFaceSegmants(verts,segmantSize,mode = 0):
-    # Mode 1 creates segmants on edges only
-    # Mode 0 creates segmants inside without edges
+def getFacesegments(verts,segmentSize,mode = 0):
+    # Mode 1 creates segments on edges only
+    # Mode 0 creates segments inside without edges
 
     line1 = Line(verts[0],verts[1])
     line1.id = "01"
@@ -212,39 +212,39 @@ def getFaceSegmants(verts,segmantSize,mode = 0):
 
     # line0 = [p1,p2]
 
-    segmantCount0 = int(lineList[0].length/segmantSize)
-    segmantCount1 = int(lineList[1].length/segmantSize)
-    segmantCount2 = segmantCount0 +segmantCount1
+    segmentCount0 = int(lineList[0].length/segmentSize)
+    segmentCount1 = int(lineList[1].length/segmentSize)
+    segmentCount2 = segmentCount0 +segmentCount1
     
-    segmantList = []
-    segmantList.append(getLineSegmants(lineList[0],segmantCount0))
-    segmantList.append(getLineSegmants(lineList[1],segmantCount1))
-    segmantList.append(getLineSegmants(lineList[2],segmantCount2))
+    segmentList = []
+    segmentList.append(getLinesegments(lineList[0],segmentCount0))
+    segmentList.append(getLinesegments(lineList[1],segmentCount1))
+    segmentList.append(getLinesegments(lineList[2],segmentCount2))
 
-    segmantList[0].reverse()
-    segmantList[1].reverse()
+    segmentList[0].reverse()
+    segmentList[1].reverse()
 
-    lineSegmants = segmantList[0] + segmantList[1]
+    linesegments = segmentList[0] + segmentList[1]
 
    
 
     i = 0
-    segmantsList = []
+    segmentsList = []
  
-    for s in segmantList[2]:
-        line = Line(s,lineSegmants[i])
-        x = getLineSegmants(line,int(line.length/segmantSize))
+    for s in segmentList[2]:
+        line = Line(s,linesegments[i])
+        x = getLinesegments(line,int(line.length/segmentSize))
         ignore = 0
         for l in x:
             if(ignore != 0):
-                segmantsList.append(l)
+                segmentsList.append(l)
             ignore += 1
         i += 1
 
 
-    return segmantsList
+    return segmentsList
 
-def getLineSegmants(line,segmantCount):
+def getLinesegments(line,segmentCount):
 
     lst =[]
 
@@ -255,8 +255,8 @@ def getLineSegmants(line,segmantCount):
     ly = p2[1] - p1[1]
     lz = p2[2] - p1[2]
 
-    for i in range(0,segmantCount):
-        lst.append([p1[0]+lx * (float(i)/segmantCount),p1[1]+ly* (float(i)/segmantCount),p1[2]+lz* (float(i)/segmantCount)])
+    for i in range(0,segmentCount):
+        lst.append([p1[0]+lx * (float(i)/segmentCount),p1[1]+ly* (float(i)/segmentCount),p1[2]+lz* (float(i)/segmentCount)])
     
     return lst
 
@@ -275,7 +275,7 @@ class Line(object):
         distance = math.sqrt(sum)
         return distance
 
-class Segmant(object):
+class segment(object):
     def __init__(self,location,normal):
         self.x = location[0]
         self.z = location[1]
