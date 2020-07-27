@@ -3,14 +3,14 @@ import maya.api.OpenMayaRender as omr
 import maya.api.OpenMayaUI as omui
 import maya.cmds as cmds
 
-import envGen.segmants
-reload (envGen.segmants)
+import envGen.segments
+reload (envGen.segments)
 
 
 maya_useNewAPI = True
 
 class envGenerator(omui.MPxLocatorNode):
-    TYPE_NAME = "segmantNode"
+    TYPE_NAME = "segmentNode"
     TYPE_ID = om.MTypeId(0x0007f7f7)
     DRAW_CLASSIFICATION = "drawdb/geometry/helloworld"
     DRAW_REGISTRANT_ID = "envGenerator"
@@ -29,7 +29,7 @@ class envGenerator(omui.MPxLocatorNode):
         pass
 
 class envGenratorCmd(om.MPxCommand):
-    COMMAND_NAME ="drawSegmants"
+    COMMAND_NAME ="drawsegments"
     POLY = ""
 
     def __init__(self):
@@ -38,9 +38,9 @@ class envGenratorCmd(om.MPxCommand):
     def doIt(self,args):
         
         envGenratorCmd.POLY = args.asString(0)
-        segmantDraw.MODE = args.asInt(1)
-        segmantDraw.segmants = envGen.segmants.getSegmants(envGenratorCmd.POLY,1)
-        cmds.createNode("segmantNode")
+        segmentDraw.MODE = args.asInt(1)
+        segmentDraw.segments = envGen.segments.getsegments(envGenratorCmd.POLY,1)
+        cmds.createNode("segmentNode")
         
     
 
@@ -54,13 +54,13 @@ def printHello():
     return "Hello"
 
 
-class segmantDraw(omr.MPxDrawOverride):
-    NAME = "segmantDraw"
+class segmentDraw(omr.MPxDrawOverride):
+    NAME = "segmentDraw"
     MODE = 0
-    segmants = []
+    segments = []
     parent = ""
     def __init__(self, obj):
-        super(segmantDraw, self).__init__(obj, None, False)
+        super(segmentDraw, self).__init__(obj, None, False)
 
     def prepareForDraw(self, obj_path, camera_path, frame_context, old_data):
         pass
@@ -80,24 +80,24 @@ class segmantDraw(omr.MPxDrawOverride):
 
         draw_manager.beginDrawable()
         
-        if segmantDraw.MODE == 0:
-            for s in segmantDraw.segmants:
+        if segmentDraw.MODE == 0:
+            for s in segmentDraw.segments:
                 draw_manager.point(om.MPoint(s.location))
         else:
-            for s in segmantDraw.segmants:
+            for s in segmentDraw.segments:
                 endPoint = [s.location[0]+s.normal[0], s.location[1]+s.normal[1], s.location[2]+s.normal[2]]
                 draw_manager.line(om.MPoint(s.location), om.MPoint(endPoint))
 
         draw_manager.endDrawable()
 
         # try:
-        #     cmds.parent(transform,segmantDraw.parent)
+        #     cmds.parent(transform,segmentDraw.parent)
         # except:
         #     pass
 
     @classmethod
     def creator(cls, obj):
-        return segmantDraw(obj)
+        return segmentDraw(obj)
 
 
 
@@ -120,9 +120,9 @@ def initializePlugin(plugin):
     try:
         omr.MDrawRegistry.registerDrawOverrideCreator(envGenerator.DRAW_CLASSIFICATION,
                                                       envGenerator.DRAW_REGISTRANT_ID,
-                                                      segmantDraw.creator)
+                                                      segmentDraw.creator)
     except:
-        om.MGlobal.displayError("Failed to register draw override: {0}".format(segmantDraw.NAME))
+        om.MGlobal.displayError("Failed to register draw override: {0}".format(segmentDraw.NAME))
 
     #registerCommand
     try:

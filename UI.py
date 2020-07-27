@@ -7,8 +7,8 @@ from functools import partial
 import maya.OpenMayaUI as omui
 from maya import cmds
 
-import envGen.segmants
-reload (envGen.segmants)
+import envGen.segments
+reload (envGen.segments)
 
 #endregion
 
@@ -141,8 +141,8 @@ class envGenWindow(QtWidgets.QWidget):
                 self.insertTopLevelItem(0,row)
                 self.setItemWidget(row,0,polyItem_label)
 
-                segmants = envGen.segmants.getSegmants(basePoly,1)
-                cmds.drawSegmants(basePoly,1)
+                segments = envGen.segments.getsegments(basePoly,1)
+                cmds.drawsegments(basePoly,1)
 
                 
             else:
