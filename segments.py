@@ -8,7 +8,7 @@ import cnt
 
 
 
-def getsegments(poly,segmentSize):
+def getsegments(poly,segmentDensity = 1):
     # get edges segments
 
   
@@ -21,6 +21,8 @@ def getsegments(poly,segmentSize):
 
     ignoreEdge = []
 
+    polyArea = cmds.polyEvaluate(poly,wa = 1) 
+    segmentSize = math.sqrt(polyArea) / (50 * segmentDensity)
     
 
     #create segments for edges
