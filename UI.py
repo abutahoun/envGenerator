@@ -2,6 +2,7 @@
 
 from PySide2 import QtCore
 from PySide2 import QtWidgets
+from PySide2 import QtGui
 from shiboken2 import wrapInstance
 from functools import partial
 import maya.OpenMayaUI as omui
@@ -141,8 +142,16 @@ class envGenWindow(QtWidgets.QWidget):
                 self.insertTopLevelItem(0,row)
                 self.setItemWidget(row,0,polyItem_label)
 
-                segments = envGen.segments.getsegments(basePoly,1)
-                cmds.drawsegments(basePoly,1)
+                segmentsDict = envGen.segments.getsegments(basePoly,1,True)
+
+                for key in segmentsDict:
+                    colorRow = QtWidgets.QTreeWidgetItem()
+                    color = QtGui.QColor(key)
+                    colorRow.setBackgroundColor(0,color)
+                    colorLabel =self.TreeLabel(key,colorRow)
+                    row.addChild(colorRow)
+                    self.setItemWidget(colorRow,0,colorLabel)
+                #cmds.drawsegments(basePoly,1)
 
                 
             else:

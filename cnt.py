@@ -11,20 +11,23 @@ from maya import cmds
 from array import array
 import ctypes
 
-def getColor(segmantDict,poly):
-
+def getColor(segmantList,poly):
 
     MPoly = om.MGlobal.getSelectionListByName(poly)
-
     polyPath = MPoly.getDagPath(0)
     mesh = om.MFnMesh(polyPath)
 
-    length = len(segmantDict)
+    shape = mesh.name()
+    shadingGrps = cmds.listConnections(shape,type='shadingEngine')
+    #Get Connected shader name as string
+    shader = cmds.ls(cmds.listConnections(shadingGrps),materials=1)[0]
+
+    length = len(segmantList)
 
 
     imgObj = om1.MObject()  
     sel = om1.MSelectionList()  
-    om1.MGlobal.getSelectionListByName('lambert2', sel)  
+    om1.MGlobal.getSelectionListByName(shader, sel)  
     sel.getDependNode(0, imgObj)  
     fnThisNode = om1.MFnDependencyNode(imgObj)  
     attr = fnThisNode.attribute( "color" )  
@@ -39,8 +42,8 @@ def getColor(segmantDict,poly):
 
 
 
-    for segmant in segmantDict:
-        location = segmantDict[segmant].location
+    for segmant in segmantList:
+        location = segmant.location
         vector = om.MVector(location[0],location[1],location[2])
         point = om.MPoint(vector)
         u,v,w = mesh.getUVAtPoint(point,4)
@@ -50,10 +53,10 @@ def getColor(segmantDict,poly):
 
         color = outColours[0]
 
-        segmantDict[segmant].color = [color.x,color.y,color.z]
+        segmant.color = [color.x,color.y,color.z]
 
 
-    return segmantDict
+    return segmantList
 
 
 

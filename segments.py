@@ -5,10 +5,11 @@ from maya import cmds
 import maya.api.OpenMaya as om
 
 import cnt
+reload (cnt)
 
 
 
-def getsegments(poly,segmentDensity = 1):
+def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
     # get edges segments
 
   
@@ -64,7 +65,7 @@ def getsegments(poly,segmentDensity = 1):
 
 
         for s in getLinesegments(line,size):
-            segmentList.append(segment(s, normal))
+            segmentList.append(Segment(s, normal))
 
     
     #crete segments for inner face without edges
@@ -80,7 +81,7 @@ def getsegments(poly,segmentDensity = 1):
         normal = getNormalFromVerts(vertsList)
         
         for s in getFacesegments(vertsList,segmentSize):
-            segmentList.append(segment(s, normal))
+            segmentList.append(Segment(s, normal))
             
 
     # delete tringualted Poly
@@ -89,7 +90,28 @@ def getsegments(poly,segmentDensity = 1):
     
         
     cmds.delete(tri) 
+
+    # sample texures
+    if useTexture:
+        colorDict = {}
+        segmentList = cnt.getColor(segmentList,poly)
+        for segment in segmentList:
+            color = segment.getColor()
+            if not color in colorDict:
+                colorDict[color] = [segment]
+            else:
+                colorDict[color].append(segment)
+
+    #Delete Color dictionaries with length lower than colorThreshold
+    toDelete = []
+    for key in colorDict:
+        if len(colorDict[key]) < colorThreshold:
+            toDelete.append(key)    #mark keys for deletion
     
+    for key in toDelete:
+        del colorDict[key]  #delete keys
+    return colorDict
+
 
     return segmentList
 
@@ -277,7 +299,7 @@ class Line(object):
         distance = math.sqrt(sum)
         return distance
 
-class segment(object):
+class Segment(object):
     def __init__(self,location,normal):
         self.x = location[0]
         self.z = location[1]
@@ -287,6 +309,18 @@ class segment(object):
         self.rotation  = getRotation(normal)
         self.color =[]
         self.normal = normal
+
+    def getColor(self, mergeThreshold = 40):
+        if len(self.color) >= 3:
+            #convert rgb to hex
+            r = int(self.color[0]* 255/mergeThreshold) * mergeThreshold
+            g = int(self.color[1]* 255/mergeThreshold) * mergeThreshold
+            b = int(self.color[2]* 255/mergeThreshold) * mergeThreshold
+            hex = '#%02x%02x%02x' % ( r , g , b)
+
+            return hex
+        else:
+            return "0000"
         
 
 
