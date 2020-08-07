@@ -49,7 +49,7 @@ class envGenWindow(QtWidgets.QWidget):
         
         self.basePoly_label = QtWidgets.QLabel("test")
         self.addBase_btn = QtWidgets.QPushButton("Select Base Poly")
-        self.ok_btn = QtWidgets.QPushButton("Ok")
+        self.generate_btn = QtWidgets.QPushButton("Generate")
 
         #TreeWidget
         self.treeWidget = self.TreeWidget()
@@ -71,7 +71,7 @@ class envGenWindow(QtWidgets.QWidget):
 
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch()
-        button_layout.addWidget(self.ok_btn)
+        button_layout.addWidget(self.generate_btn)
 
         main_Layout = QtWidgets.QVBoxLayout(self)
         main_Layout.addLayout(form_layout)
@@ -83,7 +83,7 @@ class envGenWindow(QtWidgets.QWidget):
 
 
     def createConnection(self):
-        pass
+        self.generate_btn.clicked.connect(self.generate)
 
 
     
@@ -114,13 +114,39 @@ class envGenWindow(QtWidgets.QWidget):
 
 
 
+    def generate(self):
+ 
+        #loop through top level items
+        for i in range (self.treeWidget.topLevelItemCount()):
+            widgetItem = self.treeWidget.topLevelItem(i)
+            treeLabel = self.treeWidget.itemWidget(widgetItem,0)
+            print treeLabel.text
+            self.getChildren(widgetItem)
 
 
-    
+            
+
+    def getChildren(self,widgetItem):
+        #Get all children recursively
+        children = []
+        for j in range (widgetItem.childCount()):
+                child = widgetItem.child(j)
+                treeLabel = self.treeWidget.itemWidget(child,0)
+                if(child.active):children.append(treeLabel.text)
+                self.getChildren(child)
+
+                print child.parent().text
+
+        print children
+
+
+
+
     class TreeWidget(QtWidgets.QTreeWidget):
         def __init__(self, parent = None):
         
             QtWidgets.QTreeWidget.__init__(self, parent)
+ 
 
         def contextMenuEvent(self, event):
             contextMenu = QtWidgets.QMenu(self)
@@ -128,7 +154,7 @@ class envGenWindow(QtWidgets.QWidget):
             contextMenu.addAction(newAction)
             newAction.triggered.connect(self.selectBasePoly)
 
-
+            #create menue at mouse location
             action = contextMenu.exec_(self.viewport().mapToGlobal(event.pos()))
             
         def selectBasePoly(self):
@@ -136,33 +162,48 @@ class envGenWindow(QtWidgets.QWidget):
             
             if len(sel) > 0:
                 basePoly = sel[0]
-                row = QtWidgets.QTreeWidgetItem()
+                row = self.TreeWidgetItem(active = False)
                 polyItem_label = self.TreeLabel(sel[0],row)
 
                 self.insertTopLevelItem(0,row)
                 self.setItemWidget(row,0,polyItem_label)
 
                 segmentsDict = envGen.segments.getsegments(basePoly,1,True)
+                
 
+                #Add colors as childs
                 for key in segmentsDict:
-                    colorRow = QtWidgets.QTreeWidgetItem()
+                    colorRow = self.TreeWidgetItem(segmentsDict[key],active = False)
                     color = QtGui.QColor(key)
                     colorRow.setBackgroundColor(0,color)
                     colorLabel =self.TreeLabel(key,colorRow)
                     row.addChild(colorRow)
                     self.setItemWidget(colorRow,0,colorLabel)
+
+
+
+
                 #cmds.drawsegments(basePoly,1)
 
                 
             else:
                 "Nothing Selected"
-
         
+
+        class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
+            def __init__(self,segment=[],active = True,text ="test"):
+                QtWidgets.QTreeWidgetItem.__init__(self)
+
+                self.active = active
+                self.text = text
+                self.segment = segment
+
         class TreeLabel(QtWidgets.QLabel):
             def __init__(self, text, row):
                 QtWidgets.QLabel.__init__(self, text)
 
                 self.row = row
+                self.text = text
                 
             def contextMenuEvent(self, event):
                 contextMenu = QtWidgets.QMenu(self)
@@ -177,16 +218,21 @@ class envGenWindow(QtWidgets.QWidget):
                 sel = cmds.ls(selection = True)
                 
                 if len(sel) > 0:
-                    basePoly = sel[0]
-                    newRow = QtWidgets.QTreeWidgetItem()
-                    polyItem_label = self.row.treeWidget().TreeLabel(sel[0],newRow)
+                    poly = sel[0]
+                    newRow = self.row.treeWidget().TreeWidgetItem()
+                    polyItem_label = self.row.treeWidget().TreeLabel(poly,newRow)
                     self.row.addChild(newRow)
                     self.row.treeWidget().setItemWidget(newRow,0,polyItem_label)
                     
                     
                 else:
                     "Nothing Selected"
-                
+            
+            def getText(self):
+                return self.text
+
+
+            
 
 
 
