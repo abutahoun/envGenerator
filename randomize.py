@@ -11,26 +11,41 @@ reload (segments)
 
 
 
-def randomize(basePoly,poly=[],folder=[],buffer = [0,0,0],rSx=[1,1],rSy=[1,1],rSz=[1,1],
+def randomize(segmentList,poly=[],folder=[],buffer = [0,0,0],rSx=[1,1],rSy=[1,1],rSz=[1,1],
 Normals = True,mode = 1):
     
     # rS Scale Range
 
-    segmentList = segments.getsegments(basePoly,1)
+
     segmentsDict = {}
 
-    if mode ==1:
-        segmentList.sort(key=lambda x: x.z + x.y + x.x,reverse=1)
-        #segmentList.sort(key=lambda x: (x.x , x.y , x.z),reverse=1)
+    listLength = len(segmentList)
+
+    #sort and save Min and Max
+    segmentList.sort(key=lambda x: (x.z , x.y , x.x),reverse=1)
+    zMax = segmentList[0].z
+    zMin = segmentList[listLength-1].z
+
+    segmentList.sort(key=lambda x: (x.y , x.x , x.z),reverse=1)
+    yMax = segmentList[0].x
+    yMin = segmentList[listLength-1].x
+
+    segmentList.sort(key=lambda x: (x.x , x.y , x.z),reverse=1)
+    xMax = segmentList[0].x
+    xMin = segmentList[listLength-1].x
+
+    #Create boinding box segemnts
+    baseBbox = [xMin,yMin,zMin,xMax,yMax,zMax]
 
 
-    for i in range (len(segmentList)):
+
+
+    for i in range (listLength):
         segmentsDict[i] = segmentList[i]
         segmentsDict[i].id = i
 
     keyList = list(segmentsDict.keys())
 
-    segmentsDict = cnt.getColor(segmentsDict,basePoly)
     
 
     polyList = []
@@ -51,15 +66,11 @@ Normals = True,mode = 1):
             keyList.remove(key)
             segment = segmentsDict[key]
 
-        color = numpy.around(segment.color,decimals=4)
-
-        if numpy.all(color == numpy.array([[ 1,1,1]])):
-            continue
+        
 
         rndScale = numpy.random.rand(1,3)[0] #genrate random offset
 
-        # to do
-        # check if the randmoized scale will make a collision with bboxes
+        
         
         if len(poly) > 0:
             mesh = cmds.duplicate(poly)[0]
@@ -104,7 +115,9 @@ Normals = True,mode = 1):
 
         cmds.scale(scaleX,scaleY,scaleZ,mesh,r=1)
 
-        baseBbox = cmds.exactWorldBoundingBox(basePoly)
+
+        
+         
         bbox = cmds.exactWorldBoundingBox(mesh)
      
         bboxX = [bbox[0],bbox[1],bbox[2],baseBbox[3],bbox[4],bbox[5]] 
@@ -129,7 +142,7 @@ Normals = True,mode = 1):
         if mode == 1:
             keyList[:] = [x for x in keyList if not cnt.inBbox(bboxX,segmentsDict[x].location,[0,0,0])]
             keyList[:] = [x for x in keyList if not cnt.inBbox(bboxY,segmentsDict[x].location,[0,0,0])]
-            #keyList[:] = [x for x in keyList if not cnt.inBbox(bboxZ,segmentsDict[x].location,[0,0,0])]
+            keyList[:] = [x for x in keyList if not cnt.inBbox(bboxZ,segmentsDict[x].location,[0,0,0])]
 
     #toDo
 
