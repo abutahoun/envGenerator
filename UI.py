@@ -11,6 +11,9 @@ from maya import cmds
 import envGen.segments
 reload (envGen.segments)
 
+import envGen.randomize
+reload(envGen.randomize)
+
 #endregion
 
 def maya_main_window():
@@ -135,9 +138,10 @@ class envGenWindow(QtWidgets.QWidget):
                 if(child.active):children.append(treeLabel.text)
                 self.getChildren(child)
 
-                print child.parent().text
+        if len(children) > 0:
+            envGen.randomize.randomize(widgetItem.segments,children)
+        
 
-        print children
 
 
 
@@ -191,12 +195,12 @@ class envGenWindow(QtWidgets.QWidget):
         
 
         class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
-            def __init__(self,segment=[],active = True,text ="test"):
+            def __init__(self,segments=[],active = True,text ="test"):
                 QtWidgets.QTreeWidgetItem.__init__(self)
 
                 self.active = active
                 self.text = text
-                self.segment = segment
+                self.segments = segments
 
         class TreeLabel(QtWidgets.QLabel):
             def __init__(self, text, row):
