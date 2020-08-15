@@ -103,14 +103,14 @@ def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
                 colorDict[color].append(segment)
 
     #Delete Color dictionaries with length lower than colorThreshold
-    toDelete = []
-    for key in colorDict:
-        if len(colorDict[key]) < colorThreshold:
-            toDelete.append(key)    #mark keys for deletion
+        toDelete = []
+        for key in colorDict:
+            if len(colorDict[key]) < colorThreshold:
+                toDelete.append(key)    #mark keys for deletion
     
-    for key in toDelete:
-        del colorDict[key]  #delete keys
-    return colorDict
+        for key in toDelete:
+            del colorDict[key]  #delete keys
+        return colorDict
 
 
     return segmentList
