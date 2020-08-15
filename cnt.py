@@ -89,14 +89,12 @@ def inBbox(bbox,translate,scale):
 
 
 def getColorConnection(poly):
-    print poly
     shape = cmds.listRelatives(poly, shapes=True)
     shadingGrps = cmds.listConnections(shape[0],type='shadingEngine')
     shaders = cmds.ls(cmds.listConnections(shadingGrps),materials=1)
 
     color = cmds.listConnections(shaders[0]+'.color')
     outColor = color[0]+'.outColor'
-    print outColor
     return outColor
 
 
