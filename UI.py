@@ -8,11 +8,10 @@ from functools import partial
 import maya.OpenMayaUI as omui
 from maya import cmds
 
-import envGen.segments
-reload (envGen.segments)
 
-import envGen.randomize
-reload(envGen.randomize)
+
+from envGen.CustomTreeWidget import TreeWidget
+reload(envGen.CustomTreeWidget)
 
 #endregion
 
@@ -55,7 +54,7 @@ class envGenWindow(QtWidgets.QWidget):
         self.generate_btn = QtWidgets.QPushButton("Generate")
 
         #TreeWidget
-        self.treeWidget = self.TreeWidget()
+        self.treeWidget = TreeWidget()
         self.treeWidget.setColumnCount(3)
     
 
@@ -123,8 +122,11 @@ class envGenWindow(QtWidgets.QWidget):
         for i in range (self.treeWidget.topLevelItemCount()):
             widgetItem = self.treeWidget.topLevelItem(i)
             treeLabel = self.treeWidget.itemWidget(widgetItem,0)
-            print treeLabel.text
-            self.getChildren(widgetItem)
+            #self.getChildren(widgetItem)
+            #To do: Change randomize function to use top level tree widget Item
+
+            envGen.randomize.randomize(widgetItem)
+            
 
 
             
@@ -139,101 +141,16 @@ class envGenWindow(QtWidgets.QWidget):
                 self.getChildren(child)
 
         if len(children) > 0:
-            envGen.randomize.randomize(widgetItem.segments,children)
-        
+            while(widgetItem.segment>0):
+                result = envGen.randomize.randomize(widgetItem.segments,widgetItem.bboxes,children[0])
+                widgetItem.segments = result.segments
+                widgetItem.bboxes.append(result.bbox)
 
 
 
 
 
-    class TreeWidget(QtWidgets.QTreeWidget):
-        def __init__(self, parent = None):
-        
-            QtWidgets.QTreeWidget.__init__(self, parent)
- 
-
-        def contextMenuEvent(self, event):
-            contextMenu = QtWidgets.QMenu(self)
-            newAction = QtWidgets.QAction('Add Base', self)
-            contextMenu.addAction(newAction)
-            newAction.triggered.connect(self.selectBasePoly)
-
-            #create menue at mouse location
-            action = contextMenu.exec_(self.viewport().mapToGlobal(event.pos()))
-            
-        def selectBasePoly(self):
-            sel = cmds.ls(selection = True)
-            
-            if len(sel) > 0:
-                basePoly = sel[0]
-                row = self.TreeWidgetItem(active = False)
-                polyItem_label = self.TreeLabel(sel[0],row)
-
-                self.insertTopLevelItem(0,row)
-                self.setItemWidget(row,0,polyItem_label)
-
-                segmentsDict = envGen.segments.getsegments(basePoly,1,True)
-                
-
-                #Add colors as childs
-                for key in segmentsDict:
-                    colorRow = self.TreeWidgetItem(segmentsDict[key],active = False)
-                    color = QtGui.QColor(key)
-                    colorRow.setBackgroundColor(0,color)
-                    colorLabel =self.TreeLabel(key,colorRow)
-                    row.addChild(colorRow)
-                    self.setItemWidget(colorRow,0,colorLabel)
-
-
-
-
-                #cmds.drawsegments(basePoly,1)
-
-                
-            else:
-                "Nothing Selected"
-        
-
-        class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
-            def __init__(self,segments=[],active = True,text ="test"):
-                QtWidgets.QTreeWidgetItem.__init__(self)
-
-                self.active = active
-                self.text = text
-                self.segments = segments
-
-        class TreeLabel(QtWidgets.QLabel):
-            def __init__(self, text, row):
-                QtWidgets.QLabel.__init__(self, text)
-
-                self.row = row
-                self.text = text
-                
-            def contextMenuEvent(self, event):
-                contextMenu = QtWidgets.QMenu(self)
-                add_action = QtWidgets.QAction('Add Selected Item', self)
-                contextMenu.addAction(add_action)
-                add_action.triggered.connect(self.addItem)
-
-
-                action = contextMenu.exec_(self.mapToGlobal(event.pos()))
-
-            def addItem(self):
-                sel = cmds.ls(selection = True)
-                
-                if len(sel) > 0:
-                    poly = sel[0]
-                    newRow = self.row.treeWidget().TreeWidgetItem()
-                    polyItem_label = self.row.treeWidget().TreeLabel(poly,newRow)
-                    self.row.addChild(newRow)
-                    self.row.treeWidget().setItemWidget(newRow,0,polyItem_label)
-                    
-                    
-                else:
-                    "Nothing Selected"
-            
-            def getText(self):
-                return self.text
+    
 
 
             
