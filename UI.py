@@ -9,9 +9,9 @@ import maya.OpenMayaUI as omui
 from maya import cmds
 
 
-
-from envGen.CustomTreeWidget import TreeWidget
+import envGen.CustomTreeWidget
 reload(envGen.CustomTreeWidget)
+from envGen.CustomTreeWidget import TreeWidget
 
 #endregion
 
@@ -123,9 +123,10 @@ class envGenWindow(QtWidgets.QWidget):
             widgetItem = self.treeWidget.topLevelItem(i)
             treeLabel = self.treeWidget.itemWidget(widgetItem,0)
             #self.getChildren(widgetItem)
-            #To do: Change randomize function to use top level tree widget Item
-
+            
             envGen.randomize.randomize(widgetItem)
+
+
             
 
 

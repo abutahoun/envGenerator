@@ -3,6 +3,8 @@ from PySide2 import QtWidgets
 from PySide2 import QtGui
 from maya import cmds
 
+from functools import partial
+
 import envGen.randomize
 reload(envGen.randomize)
 
@@ -22,33 +24,40 @@ class TreeWidget(QtWidgets.QTreeWidget):
             contextMenu = QtWidgets.QMenu(self)
             newAction = QtWidgets.QAction('Add Base', self)
             contextMenu.addAction(newAction)
-            newAction.triggered.connect(self.selectBasePoly)
+            newAction.triggered.connect(self.addItem)
 
             #create menue at mouse location
             action = contextMenu.exec_(self.viewport().mapToGlobal(event.pos()))
             
-        def selectBasePoly(self):
+        def addItem(self, row = None):
             sel = cmds.ls(selection = True)
-            
             if len(sel) > 0:
-                basePoly = sel[0]
-                row = self.TreeWidgetItem(active = False)
-                polyItem_label = self.TreeLabel(sel[0],row)
+                poly = sel[0]
+                sections = envGen.segments.getsegments(poly,1,True)
+                newRow = self.TreeWidgetItem(poly=poly)
 
-                self.insertTopLevelItem(0,row)
-                self.setItemWidget(row,0,polyItem_label)
+                if (not row):
+                    self.insertTopLevelItem(0,newRow)
+                    newRow.isItem = False
+                else:
+                    row.addChild(newRow)
+                    
 
-                segmentsDict = envGen.segments.getsegments(basePoly,1,True)
+                polyItem_label = self.TreeLabel(sel[0],newRow)
+                self.setItemWidget(newRow,0,polyItem_label)
                 
-
+                
+                
+                if len(sections) > 1:
                 #Add colors as childs
-                for key in segmentsDict:
-                    colorRow = self.TreeWidgetItem(segmentsDict[key],active = False)
-                    color = QtGui.QColor(key)
-                    colorRow.setBackgroundColor(0,color)
-                    colorLabel =self.TreeLabel(key,colorRow)
-                    row.addChild(colorRow)
-                    self.setItemWidget(colorRow,0,colorLabel)
+                    for section in sections:
+                        
+                        color = QtGui.QColor(section.color)
+                        colorRow = self.TreeWidgetItem(section.segments,isItem = False,color =color)
+                        colorRow.setBackgroundColor(0,color)
+                        colorLabel =self.TreeLabel("",colorRow)
+                        newRow.addChild(colorRow)
+                        self.setItemWidget(colorRow,0,colorLabel)
 
 
 
@@ -61,16 +70,18 @@ class TreeWidget(QtWidgets.QTreeWidget):
         
 
         class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
-            def __init__(self,segments=[],active = True,poly =None):
+            def __init__(self,segments=[],isItem = True,poly =None,color = None):
                 QtWidgets.QTreeWidgetItem.__init__(self)
 
-                self.active = active
+                
                 self.segments = segments
                 self.bbox = self.getBbox(segments)
                 self.segmentsDict = {}
                 self.segmentsDict, self.keyList = self.generateDict(segments)
                 self.colliders = []
                 self.poly = poly
+                self.color = color
+                self.isItem = isItem
                 
                 
 
@@ -123,12 +134,13 @@ class TreeWidget(QtWidgets.QTreeWidget):
 
                 self.row = row
                 self.text = text
+  
                 
             def contextMenuEvent(self, event):
                 contextMenu = QtWidgets.QMenu(self)
                 add_action = QtWidgets.QAction('Add Selected Item', self)
                 contextMenu.addAction(add_action)
-                add_action.triggered.connect(self.addItem)
+                add_action.triggered.connect(partial(self.row.treeWidget().addItem,self.row))
 
 
                 action = contextMenu.exec_(self.mapToGlobal(event.pos()))

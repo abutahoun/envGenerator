@@ -90,10 +90,11 @@ def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
     
         
     cmds.delete(tri) 
-
+    colorDict = {}
+    sectionList = []
     # sample texures
     if useTexture:
-        colorDict = {}
+        
         segmentList = cnt.getColor(segmentList,poly)
         for segment in segmentList:
             color = segment.getColor()
@@ -110,10 +111,22 @@ def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
     
         for key in toDelete:
             del colorDict[key]  #delete keys
-        return colorDict
+        
+        sectionList = dectToSectionList(colorDict)
+    else:
+        sectionList.append(section(segmentList))
 
 
-    return segmentList
+    
+    return sectionList
+
+
+def dectToSectionList(colorDict):
+    sList = []
+    for key in colorDict:
+        sList.append(section(colorDict[key],color=key,active=False))
+    
+    return sList
 
 
 def getVerts(verts,poly):
@@ -321,7 +334,64 @@ class Segment(object):
             return hex
         else:
             return "0000"
-        
+
+class Section(object):
+    def __init__(self,segments=[],active = True,poly =[], color=None,tree = None,isItem = True, pool = []):
+        self.active = active
+        self.segments = segments
+        self.bbox = self.getBbox(segments)
+        self.segmentsDict = {}
+        self.segmentsDict, self.keyList = self.generateDict(segments)
+        self.colliders = []
+        self.poly = poly
+        self.color  = color
+        self.isItem = isItem
+        self.tree = tree
+        self.pool = []
+
+
+    def getBbox(self,segments):
+    #sort and save Min and Max
+
+        listLength = self.getSize()
+        if segments == []:
+            return None
+
+        segments.sort(key=lambda x: (x.z , x.y , x.x),reverse=1)
+        zMax = segments[0].z
+        zMin = segments[listLength-1].z
+
+        segments.sort(key=lambda x: (x.y , x.x , x.z),reverse=1)
+        yMax = segments[0].x
+        yMin = segments[listLength-1].x
+
+        segments.sort(key=lambda x: (x.x , x.y , x.z),reverse=1)
+        xMax = segments[0].x
+        xMin = segments[listLength-1].x
+
+        #Create bounding box for segemnts
+        bbox = [xMin,yMin,zMin,xMax,yMax,zMax]
+        return bbox
+
+    def generateDict(self,segments):
+        segmentsDict = {}
+        for i in range (self.getSize()):
+            segmentsDict[i] = segments[i]
+            segmentsDict[i].id = i
+
+        keyList = list(segmentsDict.keys())
+
+        return segmentsDict,keyList
+
+    def addCollider(self,bbox):
+        self.colliders.append(bbox)
+
+    def getSafeArea(self,bbox):
+        pass
+
+    def getSize(self):
+        return len(self.segments)
+
 
 
 

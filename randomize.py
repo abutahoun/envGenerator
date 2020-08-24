@@ -11,7 +11,118 @@ reload (segments)
 
 
 
-def randomize(segmentList,poly=[],folder=[],buffer = [0,0,0],rSx=[1,1],rSy=[1,1],rSz=[1,1],
+def randomize(widgetItem):
+
+
+    section = segments.section(tree = widgetItem,poly= widgetItem.poly)
+
+
+    processSection(section)
+
+
+    # listLength = len(widgetItem.segments)
+    # treeWidget = widgetItem.treeWidget()
+    # items = []
+
+    # for j in range (widgetItem.childCount()):
+    #         child = widgetItem.child(j)
+    #         treeLabel = treeWidget.itemWidget(child,0)
+    #         if(child.active):
+    #             items.append(child)
+    #             print child.poly
+            
+    #             if len(items) > 0:
+    #                 section = segments.getsegments(widgetItem.poly,1,False)[0]
+    #                 item = numpy.random.choice(items)
+    #                 randomPoly(section,item)
+            
+
+    #         randomize(child)
+
+
+    # if len(items) > 0:
+    #     item = numpy.random.choice(items)
+
+    #     randomPoly(widgetItem,item)
+        # while(widgetItem.segments>0):
+        #     result = randomPoly(widgetItem.segments,widgetItem.bboxes,children[0])
+        #     widgetItem.segments = result.segments
+        #     widgetItem.bboxes.append(result.bbox)
+
+
+        
+
+
+def processSection1(section):
+
+
+    children = []
+    widgetItem = section.tree
+    if widgetItem.childCount() == 0: return
+
+    for j in range (widgetItem.childCount()):
+        child = widgetItem.child(j)
+        if child.isItem: children.append(child)
+
+    if section.segments == []:
+            section = segments.getsegments(widgetItem.poly,1,False)[0]
+
+
+
+    print children
+    widgetItem = section.tree
+
+
+        
+    if len(children) > 0:
+        item = numpy.random.choice(children)
+
+        
+
+        randomize(child)
+
+    
+
+def processSection(section):
+    tree = section.tree
+    if tree.childCount() == 0: return
+
+    children = []
+    for j in range (tree.childCount()):
+        children.append(tree.child(j))
+    
+    child = numpy.random.choice(children)
+
+
+    if section.segments == []:
+        section = segments.getsegments(section.poly,1,False)[0]
+        randomPoly(section,child)
+
+
+    
+    
+
+def randomPoly(section,child):
+
+    if child.isItem:
+        poly = child.poly
+        rand = numpy.random.choice(section.keyList)
+        section.keyList.remove(rand)
+        segment = section.segmentsDict.get(rand)
+        
+        mesh = cmds.duplicate(poly)
+
+        bbox = cmds.exactWorldBoundingBox(mesh)
+
+        #cmds.move(bbox[3],bbox[1], bbox[5], '%s.scalePivot' % mesh,"%s.rotatePivot"% mesh, ws=True)
+        cmds.move(segment.location[0],segment.location[1],segment.location[2],mesh,ws = 1,rpr=1)
+        cmds.rotate(segment.rotation[0],segment.rotation[1],segment.rotation[2],mesh)
+
+        newSection = segments.Section(poly=mesh,tree=child)
+        processSection(newSection)
+
+
+def randomize1(segmentList,poly=[],folder=[],buffer = [0,0,0],rSx=[1,1],rSy=[1,1],rSz=[1,1],
 Normals = True,mode = 1):
     
     # rS Scale Range
@@ -52,10 +163,14 @@ Normals = True,mode = 1):
 
     bboxes = []
 
+
+
+
+
+
+
     i = 1
     while len(keyList) > 0:
-   # print len(keyList)
-    #for itor in range(40):
         if mode == 0:
             rand = numpy.random.choice(keyList)
             keyList.remove(rand)
