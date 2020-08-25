@@ -79,6 +79,7 @@ def CreatePoly(location,scale):
 
 def inBbox(bbox,translate,scale):
     
+
     if translate[0] + scale[0] >= bbox[0]  and translate[0] - scale[0] <= bbox[3]  :
         if translate[1] + scale[1]  >= bbox[1]  and translate[1] - scale[1] <= bbox[4] :
             if translate[2] + scale[2]  >= bbox[2]  and translate[2] - scale[2] <= bbox[5] :

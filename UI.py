@@ -95,14 +95,8 @@ class envGenWindow(QtWidgets.QWidget):
     def polyItemClicked(self):
         pass
 
-    def setContextMenu(self, item):
-        polyItem_label.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        polyItem_label.customContextMenuRequested.connect(partial(self.on_context_menu,item))
         
 
-    def on_context_menu(self, pos):
-        # show context menu
-        self.popMenu.exec_(self.treeWidget.mapToGlobal(pos))
 
     
 

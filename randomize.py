@@ -1,4 +1,5 @@
 from maya import cmds
+import maya.api.OpenMaya as om
 import numpy
 import cnt
 reload (cnt)
@@ -14,7 +15,7 @@ reload (segments)
 def randomize(widgetItem):
 
 
-    section = segments.section(tree = widgetItem,poly= widgetItem.poly)
+    section = segments.Section(tree = widgetItem,poly= widgetItem.poly)
 
 
     processSection(section)
@@ -51,36 +52,6 @@ def randomize(widgetItem):
 
 
         
-
-
-def processSection1(section):
-
-
-    children = []
-    widgetItem = section.tree
-    if widgetItem.childCount() == 0: return
-
-    for j in range (widgetItem.childCount()):
-        child = widgetItem.child(j)
-        if child.isItem: children.append(child)
-
-    if section.segments == []:
-            section = segments.getsegments(widgetItem.poly,1,False)[0]
-
-
-
-    print children
-    widgetItem = section.tree
-
-
-        
-    if len(children) > 0:
-        item = numpy.random.choice(children)
-
-        
-
-        randomize(child)
-
     
 
 def processSection(section):
@@ -103,23 +74,46 @@ def processSection(section):
     
 
 def randomPoly(section,child):
-
+    #Todo: Add suport for Non Items
+    newPoly = None
     if child.isItem:
-        poly = child.poly
-        rand = numpy.random.choice(section.keyList)
-        section.keyList.remove(rand)
-        segment = section.segmentsDict.get(rand)
+        group = []
+        #for i in range(2): #testing
+        while len(section.keyList) > 0:
+            poly = child.poly
+            newPoly = cmds.duplicate(poly)[0]
+            bbox = cmds.exactWorldBoundingBox(newPoly)
+
+            #get keys that don't create collision
+            safeList = section.getSafeArea(newPoly)
+            if len(safeList) < 1: break
+            #random segment key from safeList
+            rand = numpy.random.choice(safeList)
+
+            #Remove key from orginal keyList
+            section.keyList.remove(rand)
+            segment = section.segmentsDict.get(rand)
+            
+
+
+            #cmds.move(bbox[3],bbox[1], bbox[5], '%s.scalePivot' % mesh,"%s.rotatePivot"% mesh, ws=True) #Move Pivot
+            cmds.move(segment.location[0],segment.location[1],segment.location[2],newPoly,ws = 1,rpr=1)
+            cmds.rotate(segment.rotation[0],segment.rotation[1],segment.rotation[2],newPoly)
+
+            #recalculate Bounding Box
+            bbox = cmds.exactWorldBoundingBox(newPoly)
+            section.addCollider(bbox)
+            group.append(newPoly)
+
         
-        mesh = cmds.duplicate(poly)
 
-        bbox = cmds.exactWorldBoundingBox(mesh)
+            #section.removeKeys(bbox)
 
-        #cmds.move(bbox[3],bbox[1], bbox[5], '%s.scalePivot' % mesh,"%s.rotatePivot"% mesh, ws=True)
-        cmds.move(segment.location[0],segment.location[1],segment.location[2],mesh,ws = 1,rpr=1)
-        cmds.rotate(segment.rotation[0],segment.rotation[1],segment.rotation[2],mesh)
-
-        newSection = segments.Section(poly=mesh,tree=child)
-        processSection(newSection)
+            newSection = segments.Section(poly=newPoly,tree=child)
+            processSection(newSection)
+        if len(group) > 0:
+            cmds.group(group)
+        
 
 
 def randomize1(segmentList,poly=[],folder=[],buffer = [0,0,0],rSx=[1,1],rSy=[1,1],rSz=[1,1],

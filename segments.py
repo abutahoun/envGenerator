@@ -114,7 +114,7 @@ def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
         
         sectionList = dectToSectionList(colorDict)
     else:
-        sectionList.append(section(segmentList))
+        sectionList.append(Section(segmentList))
 
 
     
@@ -124,7 +124,7 @@ def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
 def dectToSectionList(colorDict):
     sList = []
     for key in colorDict:
-        sList.append(section(colorDict[key],color=key,active=False))
+        sList.append(Section(colorDict[key],color=key,active=False))
     
     return sList
 
@@ -349,6 +349,11 @@ class Section(object):
         self.tree = tree
         self.pool = []
 
+    def removeKeys(self,bbox):
+        
+        #print len(self.keyList)
+        self.keyList[:] = [x for x in self.keyList if not cnt.inBbox(bbox,self.segmentsDict[x].location,[0.1,0.1,0.1])]
+        #print len(self.keyList)
 
     def getBbox(self,segments):
     #sort and save Min and Max
@@ -386,8 +391,19 @@ class Section(object):
     def addCollider(self,bbox):
         self.colliders.append(bbox)
 
-    def getSafeArea(self,bbox):
-        pass
+    def getSafeArea(self,poly):
+        MPoly = om.MGlobal.getSelectionListByName(poly)
+        polyPath = MPoly.getDagPath(0)
+        tranformation = om.MFnTransform(polyPath)
+
+        scale = tranformation.scale()
+        safeList = self.keyList[:]
+        for collider in self.colliders:
+            safeList[:] = [x for x in safeList if not cnt.inBbox(collider,self.segmentsDict[x].location,scale)]
+        return safeList
+
+
+            
 
     def getSize(self):
         return len(self.segments)
