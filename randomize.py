@@ -60,14 +60,20 @@ def processSection(section):
 
     children = []
     for j in range (tree.childCount()):
-        children.append(tree.child(j))
-    
-    child = numpy.random.choice(children)
+        child = tree.child(j)
+        if child.isItem:
+            children.append(child)
+        else:
+            processSection(segments.Section(tree = child,segments=child.segments))
+
+    if len(children) <= 0: return
+    choice = numpy.random.choice(children)
 
 
     if section.segments == []:
         section = segments.getsegments(section.poly,1,False)[0]
-        randomPoly(section,child)
+    
+    randomPoly(section,choice)
 
 
     
@@ -105,12 +111,17 @@ def randomPoly(section,child):
             section.addCollider(bbox)
             group.append(newPoly)
 
-        
-
-            #section.removeKeys(bbox)
-
-            newSection = segments.Section(poly=newPoly,tree=child)
-            processSection(newSection)
+            sectionList = []
+            if child.useTexture:
+                sectionList = segments.getsegments(newPoly,1,True)
+                for colorSection in sectionList:
+                    for j in range (child.childCount()):
+                        if colorSection.color == child.child(j).color:
+                            colorSection.tree = child.child(j)
+                            processSection(colorSection)
+            else:
+                newSection = segments.Section(poly=newPoly,tree=child)
+                processSection(newSection)
         if len(group) > 0:
             cmds.group(group)
         

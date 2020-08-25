@@ -41,7 +41,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                     newRow.isItem = False
                 else:
                     row.addChild(newRow)
-                    
+                    if len(sections) > 1:newRow.useTexture = True
 
                 polyItem_label = self.TreeLabel(sel[0],newRow)
                 self.setItemWidget(newRow,0,polyItem_label)
@@ -58,6 +58,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                         colorLabel =self.TreeLabel("",colorRow)
                         newRow.addChild(colorRow)
                         self.setItemWidget(colorRow,0,colorLabel)
+                        
 
 
 
@@ -70,7 +71,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
         
 
         class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
-            def __init__(self,segments=[],isItem = True,poly =None,color = None):
+            def __init__(self,segments=[],isItem = True,poly =None,color = None,useTexture = False):
                 QtWidgets.QTreeWidgetItem.__init__(self)
 
                 
@@ -82,7 +83,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 self.poly = poly
                 self.color = color
                 self.isItem = isItem
-                
+                self.useTexture = useTexture
                 
 
             def getBbox(self,segments):
