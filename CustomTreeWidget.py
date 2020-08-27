@@ -56,8 +56,9 @@ class TreeWidget(QtWidgets.QTreeWidget):
                         colorRow = self.TreeWidgetItem(section.segments,isItem = False,color =color)
                         colorRow.setBackgroundColor(0,color)
                         colorLabel =self.TreeLabel("",colorRow)
+                        colorLabel.setMargin(10)
                         newRow.addChild(colorRow)
-                        self.setItemWidget(colorRow,0,colorLabel)
+                        #self.setItemWidget(colorRow,0,colorLabel)
                         
 
 

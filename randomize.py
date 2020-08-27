@@ -113,11 +113,11 @@ def randomPoly(section,child):
 
             sectionList = []
             if child.useTexture:
-                sectionList = segments.getsegments(newPoly,1,True)
+                sectionList = segments.getsegments(newPoly,1,True) #get sections using Texture
                 for colorSection in sectionList:
                     for j in range (child.childCount()):
-                        if colorSection.color == child.child(j).color:
-                            colorSection.tree = child.child(j)
+                        if colorSection.color == child.child(j).color: 
+                            colorSection.tree = child.child(j)  #match Sction color to the tree child of the same color
                             processSection(colorSection)
             else:
                 newSection = segments.Section(poly=newPoly,tree=child)
