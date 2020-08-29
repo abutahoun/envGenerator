@@ -8,6 +8,8 @@ from functools import partial
 import envGen.randomize
 reload(envGen.randomize)
 
+from envGen.randomize import randomizer
+
 
 import envGen.segments
 reload (envGen.segments)
@@ -58,7 +60,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                         colorLabel =self.TreeLabel("",colorRow)
                         colorLabel.setMargin(10)
                         newRow.addChild(colorRow)
-                        #self.setItemWidget(colorRow,0,colorLabel)
+                        self.setItemWidget(colorRow,0,colorLabel)
                         
 
 
@@ -85,7 +87,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 self.color = color
                 self.isItem = isItem
                 self.useTexture = useTexture
-                
+                self.settings = self.Settings()
 
             def getBbox(self,segments):
                 #sort and save Min and Max
@@ -128,6 +130,10 @@ class TreeWidget(QtWidgets.QTreeWidget):
             
             def getSize(self):
                 return len(self.segments)
+
+            class Settings(object):
+                def __init__(self):
+                    self.mode = 0
                 
 
         class TreeLabel(QtWidgets.QLabel):
@@ -167,3 +173,4 @@ class TreeWidget(QtWidgets.QTreeWidget):
             
             def getText(self):
                 return self.text
+

@@ -10,9 +10,19 @@ from maya import cmds
 
 from workspace import controller
 
+import envGen.cnt
+import envGen.cnt as cnt
+reload(envGen.cnt)
+
 import envGen.CustomTreeWidget
 reload(envGen.CustomTreeWidget)
 from envGen.CustomTreeWidget import TreeWidget
+
+
+import envGen.randomize
+reload(envGen.randomize)
+
+from envGen.randomize import randomizer
 
 #endregion
 
@@ -38,6 +48,8 @@ class envGenUI(QtWidgets.QWidget):
         self.createConnection()
         self.createWorkspaceControl()
 
+        self.globalSettings = GlobalSettings()
+        self.globalSettings.useTexture=False
 
     def createWidgets(self):
         
@@ -46,33 +58,107 @@ class envGenUI(QtWidgets.QWidget):
 
         
 
-        #TreeWidget
-        self.treeWidget = TreeWidget()
-        self.treeWidget.setColumnCount(1)
-        self.treeWidget.setHeaderHidden(True)
+        #TreeWidget 
+        self.genTree = TreeWidget()
+        self.genTree.setColumnCount(1)
+        self.genTree.setHeaderHidden(True)
+
+        self.genTree.setStyleSheet("QTreeWidget { background-color : #494949; }")
+
+        #Global Settings
+        self.gs_UseTexture = QtWidgets.QCheckBox()
+        self.gs_Density = QtWidgets.QLineEdit()
+
+        #Item Settings
+        self.itemSettings_Label = QtWidgets.QLabel("")
+        self.itemSettings_Mode = QtWidgets.QComboBox()
+
+
+        self.itemSettings_Mode.addItem("Scatter",userData= 0)
+        self.itemSettings_Mode.addItem("Tiles",userData= 1)
+
+        
 
 
 
     def createLayouts(self):
-        tree_Main = QtWidgets.QTreeWidget()
+        '''
+        main_Layout
+        |_____main_tree
+              |_____Global Settings
+              |_____GenTree
+              |_____Item Settings
+        |_____buttonLayout
+
+
+        '''
+
+        main_Layout = QtWidgets.QVBoxLayout(self)
+
+        gSetting_Layout = QtWidgets.QVBoxLayout(self)
+        main_tree = QtWidgets.QTreeWidget()
+        setting_Layout = QtWidgets.QVBoxLayout(self)
+
+        #Main tree Properties
+        main_tree.setHeaderHidden(True) 
+        main_tree.setIndentation(0)
+        main_tree.setRootIsDecorated(True)
+
+
+        #Global_Settings 
+        global_formLayout = QtWidgets.QFormLayout()
+        global_formLayout.addRow("Use Textures: ", self.gs_UseTexture)
+        global_formLayout.addRow("Density: ", self.gs_Density)
+        global_group = QtWidgets.QGroupBox()
+        global_group.setLayout(global_formLayout)
+
+
+        #Item_Settings
+        settings_formLayout = QtWidgets.QFormLayout()
+        settings_formLayout.addRow("", self.itemSettings_Label)
+        settings_formLayout.addRow("Mode: ", self.itemSettings_Mode)
+
+
+        settings_group = QtWidgets.QGroupBox()
+        settings_group.setLayout(settings_formLayout)
+
+        
+        #Main Tree Childs
+        cnt.addTreeChild(main_tree,"Global Settings",global_group,expand=True)
+        cnt.addTreeChild(main_tree,"GenTree",self.genTree,expand=True)
+        cnt.addTreeChild(main_tree,"Settings",settings_group,expand=True)
+
 
 
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch()
         button_layout.addWidget(self.generate_btn)
 
-        main_Layout = QtWidgets.QVBoxLayout(self)
+        
+        
+
         #main_Layout.addLayout(form_layout)
-        main_Layout.addWidget(self.treeWidget)
+        main_Layout.addWidget(main_tree)
         main_Layout.addLayout(button_layout)
         
 
     def createConnection(self):
         self.generate_btn.clicked.connect(self.generate)
+        self.gs_UseTexture.toggled.connect(self.useTextureToggled)
+        self.genTree.itemSelectionChanged.connect(self.genTree_selectionChanged)
+        self.itemSettings_Mode.currentIndexChanged.connect(self.itemSettingsChanged)
 
     def createWorkspaceControl(self):
         self.workspaceControlInstance = controller(self.getWorksapceControlName())
         self.workspaceControlInstance.create(self.WINDOW_TITLE, self)
+
+    
+
+
+        
+
+
+
 
 
 
@@ -84,28 +170,40 @@ class envGenUI(QtWidgets.QWidget):
         for i in range (self.treeWidget.topLevelItemCount()):
             widgetItem = self.treeWidget.topLevelItem(i)
             treeLabel = self.treeWidget.itemWidget(widgetItem,0)
-            #self.getChildren(widgetItem)
+
             
-            envGen.randomize.randomize(widgetItem)
+            #envGen.randomize.randomize(widgetItem, self.globalSettings)
+            randomizer(widgetItem, self.globalSettings)
+    
+    def useTextureToggled(self):
+        print self.gs_UseTexture.isChecked()
+        self.globalSettings.useTexture = self.gs_UseTexture.isChecked()
+
+    def genTree_selectionChanged(self):
+
+        item = self.genTree.selectedItems()[0]
+        self.itemSettings_Label.setText(item.poly)
+        self.loadItemSettings(item)
 
 
-    def getChildren(self,widgetItem):
-        #Get all children recursively
-        children = []
-        for j in range (widgetItem.childCount()):
-                child = widgetItem.child(j)
-                treeLabel = self.treeWidget.itemWidget(child,0)
-                if(child.active):children.append(treeLabel.text)
-                self.getChildren(child)
+    def itemSettingsChanged(self):
 
-        if len(children) > 0:
-            while(widgetItem.segment>0):
-                result = envGen.randomize.randomize(widgetItem.segments,widgetItem.bboxes,children[0])
-                widgetItem.segments = result.segments
-                widgetItem.bboxes.append(result.bbox)
+        item = self.genTree.selectedItems()[0]
+        item.settings.mode = self.itemSettings_Mode.currentData()
+        
+    
+
+                
 
 #endregion
 
+    def loadItemSettings(self, item):
+        index = self.itemSettings_Mode.findData(item.settings.mode)
+        self.itemSettings_Mode.setCurrentIndex(index)
+
+    class GlobalSettings(object):
+        def __init__(self):
+            self.useTexture = False
 
 
 
@@ -119,11 +217,9 @@ class envGenUI(QtWidgets.QWidget):
 
 #ToDo
 
-#Create Areas using Texture
+
 #Use models from folder
 #Add option to depends on faces and vertex
-#Create Randomization Tree
-#Build Interface
 #Tile Mode
 
 

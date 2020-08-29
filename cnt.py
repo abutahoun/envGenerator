@@ -3,6 +3,9 @@ import maya.OpenMaya as om1
 import maya.OpenMayaRender as omr
 import uuid
 
+from PySide2 import QtWidgets
+from PySide2 import QtGui
+
 import maya.OpenMaya as om1  
 import maya.OpenMayaFX as omfx  
 
@@ -111,3 +114,26 @@ def getFiles(folder, fileTypes = ['obj','fbx']):
 
     
     return files
+
+
+def addTreeChild(tree, title, widget,expand=False):
+    
+    title_row = QtWidgets.QTreeWidgetItem()
+    label = QtWidgets.QLabel(title)
+    
+    label.setStyleSheet("QLabel { background-color : #646464; }")
+
+
+    widget_row = QtWidgets.QTreeWidgetItem()
+    title_row = QtWidgets.QTreeWidgetItem(True)
+    
+    
+    tree.addTopLevelItem(title_row)
+    title_row.addChild(widget_row)
+    
+    tree.setItemWidget(title_row,0,label)
+    tree.setItemWidget(widget_row,0,widget)
+
+
+
+    if expand: tree.expandItem(title_row)

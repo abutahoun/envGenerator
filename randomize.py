@@ -9,121 +9,93 @@ reload (segments)
 
 
 
+class randomizer(object):
+    def __init__(self, widgetItem, globalSettings):
+        self.widgetItem = widgetItem
+        self.globalSettings = globalSettings
 
 
+    
 
-def randomize(widgetItem):
-
-
-    section = segments.Section(tree = widgetItem,poly= widgetItem.poly)
-
-
-    processSection(section)
+        print globalSettings.useTexture
+        section = segments.Section(tree = widgetItem,poly= widgetItem.poly)
 
 
-    # listLength = len(widgetItem.segments)
-    # treeWidget = widgetItem.treeWidget()
-    # items = []
-
-    # for j in range (widgetItem.childCount()):
-    #         child = widgetItem.child(j)
-    #         treeLabel = treeWidget.itemWidget(child,0)
-    #         if(child.active):
-    #             items.append(child)
-    #             print child.poly
-            
-    #             if len(items) > 0:
-    #                 section = segments.getsegments(widgetItem.poly,1,False)[0]
-    #                 item = numpy.random.choice(items)
-    #                 randomPoly(section,item)
-            
-
-    #         randomize(child)
-
-
-    # if len(items) > 0:
-    #     item = numpy.random.choice(items)
-
-    #     randomPoly(widgetItem,item)
-        # while(widgetItem.segments>0):
-        #     result = randomPoly(widgetItem.segments,widgetItem.bboxes,children[0])
-        #     widgetItem.segments = result.segments
-        #     widgetItem.bboxes.append(result.bbox)
-
+        self.processSection(section)
 
         
     
 
-def processSection(section):
-    tree = section.tree
-    if tree.childCount() == 0: return
+    def processSection(self, section):
+        tree = section.tree
+        if tree.childCount() == 0: return
 
-    children = []
-    for j in range (tree.childCount()):
-        child = tree.child(j)
-        if child.isItem:
-            children.append(child)
-        else:
-            processSection(segments.Section(tree = child,segments=child.segments))
-
-    if len(children) <= 0: return
-    choice = numpy.random.choice(children)
-
-
-    if section.segments == []:
-        section = segments.getsegments(section.poly,1,False)[0]
-    
-    randomPoly(section,choice)
-
-
-    
-    
-
-def randomPoly(section,child):
-    #Todo: Add suport for Non Items
-    newPoly = None
-    if child.isItem:
-        group = []
-        #for i in range(2): #testing
-        while len(section.keyList) > 0:
-            poly = child.poly
-            newPoly = cmds.duplicate(poly)[0]
-            bbox = cmds.exactWorldBoundingBox(newPoly)
-
-            #get keys that don't create collision
-            safeList = section.getSafeArea(newPoly)
-            if len(safeList) < 1: break
-            #random segment key from safeList
-            rand = numpy.random.choice(safeList)
-
-            #Remove key from orginal keyList
-            section.keyList.remove(rand)
-            segment = section.segmentsDict.get(rand)
-            
-
-
-            #cmds.move(bbox[3],bbox[1], bbox[5], '%s.scalePivot' % mesh,"%s.rotatePivot"% mesh, ws=True) #Move Pivot
-            cmds.move(segment.location[0],segment.location[1],segment.location[2],newPoly,ws = 1,rpr=1)
-            cmds.rotate(segment.rotation[0],segment.rotation[1],segment.rotation[2],newPoly)
-
-            #recalculate Bounding Box
-            bbox = cmds.exactWorldBoundingBox(newPoly)
-            section.addCollider(bbox)
-            group.append(newPoly)
-
-            sectionList = []
-            if child.useTexture:
-                sectionList = segments.getsegments(newPoly,1,True) #get sections using Texture
-                for colorSection in sectionList:
-                    for j in range (child.childCount()):
-                        if colorSection.color == child.child(j).color: 
-                            colorSection.tree = child.child(j)  #match Sction color to the tree child of the same color
-                            processSection(colorSection)
+        children = []
+        for j in range (tree.childCount()):
+            child = tree.child(j)
+            if child.isItem:
+                children.append(child)
             else:
-                newSection = segments.Section(poly=newPoly,tree=child)
-                processSection(newSection)
-        if len(group) > 0:
-            cmds.group(group)
+                processSection(segments.Section(tree = child,segments=child.segments))
+
+        if len(children) <= 0: return
+        choice = numpy.random.choice(children)
+
+
+        if section.segments == []:
+            section = segments.getsegments(section.poly,1,False)[0]
+        
+        self.randomPoly(section,choice)
+
+
+    
+    
+
+    def randomPoly(self, section, child):
+        #Todo: Add suport for Non Items
+        newPoly = None
+        if child.isItem:
+            group = []
+            #for i in range(2): #testing
+            while len(section.keyList) > 0:
+                poly = child.poly
+                newPoly = cmds.duplicate(poly)[0]
+                bbox = cmds.exactWorldBoundingBox(newPoly)
+
+                #get keys that don't create collision
+                safeList = section.getSafeArea(newPoly)
+                if len(safeList) < 1: break
+                #random segment key from safeList
+                rand = numpy.random.choice(safeList)
+
+                #Remove key from orginal keyList
+                section.keyList.remove(rand)
+                segment = section.segmentsDict.get(rand)
+                
+
+
+                #cmds.move(bbox[3],bbox[1], bbox[5], '%s.scalePivot' % mesh,"%s.rotatePivot"% mesh, ws=True) #Move Pivot
+                cmds.move(segment.location[0],segment.location[1],segment.location[2],newPoly,ws = 1,rpr=1)
+                cmds.rotate(segment.rotation[0],segment.rotation[1],segment.rotation[2],newPoly)
+
+                #recalculate Bounding Box
+                bbox = cmds.exactWorldBoundingBox(newPoly)
+                section.addCollider(bbox)
+                group.append(newPoly)
+
+                sectionList = []
+                if child.useTexture:
+                    sectionList = segments.getsegments(newPoly,1,True) #get sections using Texture
+                    for colorSection in sectionList:
+                        for j in range (child.childCount()):
+                            if colorSection.color == child.child(j).color: 
+                                colorSection.tree = child.child(j)  #match Sction color to the tree child of the same color
+                                processSection(colorSection)
+                else:
+                    newSection = segments.Section(poly=newPoly,tree=child)
+                    self.processSection(newSection)
+            if len(group) > 0:
+                cmds.group(group)
         
 
 
