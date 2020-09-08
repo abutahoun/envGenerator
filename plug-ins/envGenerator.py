@@ -39,7 +39,8 @@ class envGenratorCmd(om.MPxCommand):
         
         envGenratorCmd.POLY = args.asString(0)
         segmentDraw.MODE = args.asInt(1)
-        segmentDraw.segments = envGen.segments.getsegments(envGenratorCmd.POLY,1)
+        section = envGen.segments.getsegments(envGenratorCmd.POLY,1,False)[0]
+        segmentDraw.segments = section.segments
         cmds.createNode("segmentNode")
         
     

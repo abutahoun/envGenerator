@@ -48,7 +48,7 @@ class envGenUI(QtWidgets.QWidget):
         self.createConnection()
         self.createWorkspaceControl()
 
-        self.globalSettings = GlobalSettings()
+        self.globalSettings = self.GlobalSettings()
         self.globalSettings.useTexture=False
 
     def createWidgets(self):
@@ -67,15 +67,22 @@ class envGenUI(QtWidgets.QWidget):
 
         #Global Settings
         self.gs_UseTexture = QtWidgets.QCheckBox()
-        self.gs_Density = QtWidgets.QLineEdit()
 
         #Item Settings
-        self.itemSettings_Label = QtWidgets.QLabel("")
-        self.itemSettings_Mode = QtWidgets.QComboBox()
+        self.settings_Label = QtWidgets.QLabel("")
+        self.settings_Mode = QtWidgets.QComboBox()
+        self.settings_Density = QtWidgets.QDoubleSpinBox()
+        self.settings_Density.setSingleStep(0.1)
 
 
-        self.itemSettings_Mode.addItem("Scatter",userData= 0)
-        self.itemSettings_Mode.addItem("Tiles",userData= 1)
+        self.settings_Mode.addItem("Scatter",userData= 0)
+        self.settings_Mode.addItem("Tiles",userData= 1)
+
+        #follow Normals
+        #Rotation
+        #Scale
+        #transformation
+        #Genration Density
 
         
 
@@ -106,21 +113,23 @@ class envGenUI(QtWidgets.QWidget):
 
 
         #Global_Settings 
-        global_formLayout = QtWidgets.QFormLayout()
-        global_formLayout.addRow("Use Textures: ", self.gs_UseTexture)
-        global_formLayout.addRow("Density: ", self.gs_Density)
+        gFrom_layout = QtWidgets.QFormLayout()
+        gFrom_layout.addRow("Use Texture: ",self.gs_UseTexture)
+        gSetting_Layout.addLayout(gFrom_layout)
+
         global_group = QtWidgets.QGroupBox()
-        global_group.setLayout(global_formLayout)
+        global_group.setLayout(gSetting_Layout)
 
 
         #Item_Settings
-        settings_formLayout = QtWidgets.QFormLayout()
-        settings_formLayout.addRow("", self.itemSettings_Label)
-        settings_formLayout.addRow("Mode: ", self.itemSettings_Mode)
+        settingForm_layout = QtWidgets.QFormLayout()
+        settingForm_layout.addRow("Accuracy: ",self.settings_Density)
+        settingForm_layout.addRow("Mode: ",self.settings_Mode)
+        setting_Layout.addLayout(settingForm_layout)
 
 
         settings_group = QtWidgets.QGroupBox()
-        settings_group.setLayout(settings_formLayout)
+        settings_group.setLayout(setting_Layout)
 
         
         #Main Tree Childs
@@ -146,7 +155,7 @@ class envGenUI(QtWidgets.QWidget):
         self.generate_btn.clicked.connect(self.generate)
         self.gs_UseTexture.toggled.connect(self.useTextureToggled)
         self.genTree.itemSelectionChanged.connect(self.genTree_selectionChanged)
-        self.itemSettings_Mode.currentIndexChanged.connect(self.itemSettingsChanged)
+        self.settings_Mode.currentIndexChanged.connect(self.itemSettingsChanged)
 
     def createWorkspaceControl(self):
         self.workspaceControlInstance = controller(self.getWorksapceControlName())
@@ -165,15 +174,16 @@ class envGenUI(QtWidgets.QWidget):
 
 #region Slots
     def generate(self):
- 
+
         #loop through top level items
-        for i in range (self.treeWidget.topLevelItemCount()):
-            widgetItem = self.treeWidget.topLevelItem(i)
-            treeLabel = self.treeWidget.itemWidget(widgetItem,0)
+        for i in range (self.genTree.topLevelItemCount()):
+            widgetItem = self.genTree.topLevelItem(i)
+            treeLabel = self.genTree.itemWidget(widgetItem,0)
 
             
             #envGen.randomize.randomize(widgetItem, self.globalSettings)
             randomizer(widgetItem, self.globalSettings)
+
     
     def useTextureToggled(self):
         print self.gs_UseTexture.isChecked()
@@ -182,14 +192,14 @@ class envGenUI(QtWidgets.QWidget):
     def genTree_selectionChanged(self):
 
         item = self.genTree.selectedItems()[0]
-        self.itemSettings_Label.setText(item.poly)
+        self.settings_Label.setText(item.poly)
         self.loadItemSettings(item)
 
 
     def itemSettingsChanged(self):
 
         item = self.genTree.selectedItems()[0]
-        item.settings.mode = self.itemSettings_Mode.currentData()
+        item.settings.mode = self.settings_Mode.currentData()
         
     
 
@@ -198,8 +208,8 @@ class envGenUI(QtWidgets.QWidget):
 #endregion
 
     def loadItemSettings(self, item):
-        index = self.itemSettings_Mode.findData(item.settings.mode)
-        self.itemSettings_Mode.setCurrentIndex(index)
+        index = self.settings_Mode.findData(item.settings.mode)
+        self.settings_Mode.setCurrentIndex(index)
 
     class GlobalSettings(object):
         def __init__(self):

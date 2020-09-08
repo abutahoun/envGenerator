@@ -20,24 +20,29 @@ class TreeWidget(QtWidgets.QTreeWidget):
         def __init__(self, parent = None):
         
             QtWidgets.QTreeWidget.__init__(self, parent)
- 
+            self.useTextue = False
+
 
         def contextMenuEvent(self, event):
             contextMenu = QtWidgets.QMenu(self)
-            newAction = QtWidgets.QAction('Add Base', self)
-            contextMenu.addAction(newAction)
-            newAction.triggered.connect(self.addItem)
+            addAction = QtWidgets.QAction('Add Base', self)
+            contextMenu.addAction(addAction)
+            addAction.triggered.connect(self.addItem)
+
 
             #create menue at mouse location
             action = contextMenu.exec_(self.viewport().mapToGlobal(event.pos()))
             
         def addItem(self, row = None):
             sel = cmds.ls(selection = True)
-            if len(sel) > 0:
-                poly = sel[0]
-                sections = envGen.segments.getsegments(poly,1,True)
+            sections = []
+            #if len(sel) > 0:
+            for poly in sel:
+                if self.useTextue:
+                    sections = envGen.segments.getsegments(poly,1,True)
+                
                 newRow = self.TreeWidgetItem(poly=poly)
-
+                
                 if (not row):
                     self.insertTopLevelItem(0,newRow)
                     newRow.isItem = False
@@ -45,11 +50,10 @@ class TreeWidget(QtWidgets.QTreeWidget):
                     row.addChild(newRow)
                     if len(sections) > 1:newRow.useTexture = True
 
-                polyItem_label = self.TreeLabel(sel[0],newRow)
+                polyItem_label = self.TreeLabel(poly,newRow)
                 self.setItemWidget(newRow,0,polyItem_label)
-                
-                
-                
+        
+
                 if len(sections) > 1:
                 #Add colors as childs
                     for section in sections:
@@ -73,63 +77,22 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 "Nothing Selected"
         
 
+        def deleteItem(self,row):
+            pass
+
         class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
             def __init__(self,segments=[],isItem = True,poly =None,color = None,useTexture = False):
                 QtWidgets.QTreeWidgetItem.__init__(self)
 
-                
-                self.segments = segments
-                self.bbox = self.getBbox(segments)
-                self.segmentsDict = {}
-                self.segmentsDict, self.keyList = self.generateDict(segments)
-                self.colliders = []
+            
                 self.poly = poly
                 self.color = color
                 self.isItem = isItem
                 self.useTexture = useTexture
                 self.settings = self.Settings()
 
-            def getBbox(self,segments):
-                #sort and save Min and Max
+                
 
-                listLength = self.getSize()
-                if segments == []:
-                    return None
-
-                segments.sort(key=lambda x: (x.z , x.y , x.x),reverse=1)
-                zMax = segments[0].z
-                zMin = segments[listLength-1].z
-
-                segments.sort(key=lambda x: (x.y , x.x , x.z),reverse=1)
-                yMax = segments[0].x
-                yMin = segments[listLength-1].x
-
-                segments.sort(key=lambda x: (x.x , x.y , x.z),reverse=1)
-                xMax = segments[0].x
-                xMin = segments[listLength-1].x
-
-                #Create bounding box for segemnts
-                bbox = [xMin,yMin,zMin,xMax,yMax,zMax]
-                return bbox
-
-            def generateDict(self,segments):
-                segmentsDict = {}
-                for i in range (self.getSize()):
-                    segmentsDict[i] = segments[i]
-                    segmentsDict[i].id = i
-
-                keyList = list(segmentsDict.keys())
-
-                return segmentsDict,keyList
-
-            def addCollider(self,bbox):
-                self.colliders.append(bbox)
-
-            def getSafeArea(self,bbox):
-                pass
-            
-            def getSize(self):
-                return len(self.segments)
 
             class Settings(object):
                 def __init__(self):
@@ -142,35 +105,42 @@ class TreeWidget(QtWidgets.QTreeWidget):
 
                 self.row = row
                 self.text = text
-  
+                self.tree = self.row.treeWidget()
+
+
+                # tree = QtWidgets.QTreeWidget()
+                # item = QtWidgets.QTreeWidgetItem()
+                # item.removeChild()
+                # tree.indexOfTopLevelItem(row)
+                # #tree.top
                 
             def contextMenuEvent(self, event):
+                
                 contextMenu = QtWidgets.QMenu(self)
+
+
                 add_action = QtWidgets.QAction('Add Selected Item', self)
                 contextMenu.addAction(add_action)
                 add_action.triggered.connect(partial(self.row.treeWidget().addItem,self.row))
 
+                deleteAction = QtWidgets.QAction('Delete', self)
+                contextMenu.addAction(deleteAction)
+                deleteAction.triggered.connect(partial(self.deleteItem,self.row))
 
                 action = contextMenu.exec_(self.mapToGlobal(event.pos()))
-
-            def addItem(self):
-                sel = cmds.ls(selection = True)
                 
-                if len(sel) > 0:
+                
 
-
-                    poly = sel[0]
-                    segmentsDict = envGen.segments.getsegments(poly,1,False)
-
-                    newRow = self.row.treeWidget().TreeWidgetItem(segmentsDict,poly = sel[0])
-                    polyItem_label = self.row.treeWidget().TreeLabel(poly,newRow)
-                    self.row.addChild(newRow)
-                    self.row.treeWidget().setItemWidget(newRow,0,polyItem_label)
-                    
-                    
-                else:
-                    "Nothing Selected"
+                
             
             def getText(self):
                 return self.text
+
+            def deleteItem(self, row):
+                if row.parent() is None:
+                    index = self.tree.indexOfTopLevelItem(row)
+                    self.tree.takeTopLevelItem(0)
+                else:
+                    parent = row.parent()
+                    parent.removeChild(row)
 

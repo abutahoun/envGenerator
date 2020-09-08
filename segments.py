@@ -11,7 +11,7 @@ reload (cnt)
 
 def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
     # get edges segments
-
+    segmentDensity = 2
   
     tri = cmds.duplicate(poly)
 
@@ -336,7 +336,7 @@ class Segment(object):
             return "0000"
 
 class Section(object):
-    def __init__(self,segments=[],active = True,poly =[], color=None,tree = None,isItem = True, pool = []):
+    def __init__(self,segments=[],active = True,poly =[], color=None,tree = None,isItem = True):
         self.active = active
         self.segments = segments
         self.bbox = self.getBbox(segments)
@@ -347,13 +347,10 @@ class Section(object):
         self.color  = color
         self.isItem = isItem
         self.tree = tree
-        self.pool = []
+
 
     def removeKeys(self,bbox):
-        
-        #print len(self.keyList)
         self.keyList[:] = [x for x in self.keyList if not cnt.inBbox(bbox,self.segmentsDict[x].location,[0.1,0.1,0.1])]
-        #print len(self.keyList)
 
     def getBbox(self,segments):
     #sort and save Min and Max
@@ -378,6 +375,9 @@ class Section(object):
         bbox = [xMin,yMin,zMin,xMax,yMax,zMax]
         return bbox
 
+    def sort(self):
+        self.segments.sort(key=lambda x: (x.x , x.y , x.z),reverse=1)
+
     def generateDict(self,segments):
         segmentsDict = {}
         for i in range (self.getSize()):
@@ -392,11 +392,13 @@ class Section(object):
         self.colliders.append(bbox)
 
     def getSafeArea(self,poly):
-        MPoly = om.MGlobal.getSelectionListByName(poly)
-        polyPath = MPoly.getDagPath(0)
-        tranformation = om.MFnTransform(polyPath)
 
-        scale = tranformation.scale()
+            
+        box = cmds.exactWorldBoundingBox(poly)
+        
+        
+        scale = [abs(box[3]-box[0])/2,abs(box[4]-box[1])/2,abs(box[5]-box[2])/2]
+        
         safeList = self.keyList[:]
         for collider in self.colliders:
             safeList[:] = [x for x in safeList if not cnt.inBbox(collider,self.segmentsDict[x].location,scale)]
