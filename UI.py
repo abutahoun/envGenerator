@@ -40,7 +40,7 @@ class envGenUI(QtWidgets.QWidget):
         super(envGenUI,self).__init__()
 
         self.setObjectName(self.__class__.UI_NAME)
-        self.setMinimumSize(400,600)
+        self.setMinimumSize(400,400)
 
 
         self.createWidgets()
@@ -75,7 +75,7 @@ class envGenUI(QtWidgets.QWidget):
         self.gs_Accuracy = QtWidgets.QDoubleSpinBox()
         self.gs_sample = QtWidgets.QDoubleSpinBox()
 
-        #self.gs_UseTexture.setChecked(True)
+        self.gs_UseTexture.setChecked(True)
         
         self.gs_colorThreshold.setValue(10)
 
@@ -91,11 +91,15 @@ class envGenUI(QtWidgets.QWidget):
         self.settings_Label = QtWidgets.QLabel("")
         self.settings_Mode = QtWidgets.QComboBox()
         self.settings_Accuracy = QtWidgets.QDoubleSpinBox()
+        self.settings_Sample = QtWidgets.QDoubleSpinBox()
 
 
         self.settings_Accuracy.setSingleStep(0.1)
         self.settings_Accuracy.setValue(1)
         self.settings_Accuracy.setMinimum(0.1)
+
+        self.settings_Sample.setMaximum(100)
+        self.settings_Sample.setMinimum(1)
 
         self.settings_Mode.addItem("Scatter",userData= 0)
         self.settings_Mode.addItem("Tiles",userData= 1)
@@ -142,7 +146,7 @@ class envGenUI(QtWidgets.QWidget):
         box_accuracy.addWidget(self.gs_Accuracy)
         box_accuracy.addWidget(QtWidgets.QLabel("Sample%"))
         box_accuracy.addWidget(self.gs_sample)
-        box_accuracy.addStretch()
+        #box_accuracy.addStretch()
         group_accuracy.setLayout(box_accuracy)
 
 
@@ -166,11 +170,12 @@ class envGenUI(QtWidgets.QWidget):
         gnTreeBox.addWidget(self.genTree)
         group_genTree = QtWidgets.QGroupBox()
         group_genTree.setLayout(gnTreeBox)
-        group_genTree.setMinimumHeight(900)
+        #group_genTree.setMinimumHeight(900)
 
         #Item_Settings
         settingForm_layout = QtWidgets.QFormLayout()
         settingForm_layout.addRow("Accuracy: ",self.settings_Accuracy)
+        settingForm_layout.addRow("Sample: ",self.settings_Sample)
         settingForm_layout.addRow("Mode: ",self.settings_Mode)
         setting_Layout.addLayout(settingForm_layout)
 
@@ -209,6 +214,8 @@ class envGenUI(QtWidgets.QWidget):
 
         self.genTree.itemSelectionChanged.connect(self.genTree_selectionChanged)
         self.settings_Mode.currentIndexChanged.connect(self.itemSettingsChanged)
+        self.settings_Accuracy.valueChanged.connect(self.itemSettingsChanged)
+        self.settings_Sample.valueChanged.connect(self.itemSettingsChanged)
 
     def createWorkspaceControl(self):
         self.workspaceControlInstance = controller(self.getWorksapceControlName())
@@ -256,8 +263,8 @@ class envGenUI(QtWidgets.QWidget):
 
         item = self.genTree.selectedItems()[0]
         item.settings.mode = self.settings_Mode.currentData()
-
-
+        item.settings.accuracy = self.settings_Accuracy.value()
+        item.settings.sampleSize = self.settings_Sample.value()
 
 
 
@@ -266,6 +273,9 @@ class envGenUI(QtWidgets.QWidget):
     def loadItemSettings(self, item):
         index = self.settings_Mode.findData(item.settings.mode)
         self.settings_Mode.setCurrentIndex(index)
+
+        self.settings_Accuracy.setValue(item.settings.accuracy)
+        self.settings_Sample.setValue(item.settings.sampleSize)
 
     class GlobalSettings(object):
         def __init__(self, accuracy,sampleSize,useTexture,colorThreshold):

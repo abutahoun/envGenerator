@@ -1,5 +1,7 @@
 from maya import cmds
 import maya.api.OpenMaya as om
+import maya.utils
+import threading
 import numpy
 import cnt
 reload (cnt)
@@ -14,8 +16,8 @@ class randomizer(object):
         self.widgetItem = widgetItem
         self.globalSettings = globalSettings
 
-        self.accuracy = globalSettings.accuracy
-        self.sampleSize = globalSettings.sampleSize
+        self.accuracy = widgetItem.settings.accuracy
+        self.sampleSize = widgetItem.settings.sampleSize
         self.useTexture = globalSettings.useTexture
         self.colorThreshold = globalSettings.colorThreshold
 
@@ -49,7 +51,9 @@ class randomizer(object):
             #section = segments.getsegments(section.poly,accuracy,sampleSize,useTexture,colorThreshold)[0]
 
         self.randomPoly(section,children)
-
+        
+        t  = threading.Thread(target=do_in_main, args=())
+        t.start()
 
     
     
@@ -75,6 +79,7 @@ class randomizer(object):
             if child.isItem:
                 poly = child.poly
                 #cmds.timer( s=True, n="d" )
+
                 newPoly = cmds.duplicate(poly)[0]
                 #Timer_collision += cmds.timer( e=True, n="d" )
                 bbox = cmds.exactWorldBoundingBox(newPoly)
@@ -127,7 +132,7 @@ class randomizer(object):
         #print "duplicate Time:{0}".format(Timer_Duplicate)
         #print "collision Time:{0}".format(Timer_collision)
         
-
+    
 
 def randomize1(segmentList,poly=[],folder=[],buffer = [0,0,0],rSx=[1,1],rSy=[1,1],rSz=[1,1],
 Normals = True,mode = 1):

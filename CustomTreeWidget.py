@@ -38,6 +38,8 @@ class TreeWidget(QtWidgets.QTreeWidget):
             sampleSize = self.UI.globalSettings.sampleSize
             colorThreshold = self.UI.globalSettings.colorThreshold
 
+            settings = self.Settings(accuracy,sampleSize,0)
+
 
             sel = cmds.ls(selection = True)
             sections = []
@@ -46,7 +48,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 if useTexture:
                     sections = envGen.segments.getsegments(poly,accuracy,sampleSize,useTexture,colorThreshold)
                 
-                newRow = self.TreeWidgetItem(poly=poly)
+                newRow = self.TreeWidgetItem(poly=poly,settings = settings)
                 
                 if (not row):
                     self.insertTopLevelItem(0,newRow)
@@ -64,7 +66,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                     for section in sections:
                         
                         color = QtGui.QColor(section.color)
-                        colorRow = self.TreeWidgetItem(section.segments,isItem = False,color =color)
+                        colorRow = self.TreeWidgetItem(section.segments,isItem = False,color =color,settings = settings)
                         colorRow.setBackgroundColor(0,color)
                         colorLabel =self.TreeLabel("",colorRow)
                         colorLabel.setMargin(10)
@@ -86,22 +88,25 @@ class TreeWidget(QtWidgets.QTreeWidget):
             pass
 
         class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
-            def __init__(self,segments=[],isItem = True,poly =None,color = None):
+            def __init__(self,segments=[],isItem = True,poly =None,color = None,settings = None):
                 QtWidgets.QTreeWidgetItem.__init__(self)
 
             
                 self.poly = poly
                 self.color = color
                 self.isItem = isItem
-                self.settings = self.Settings()
+                self.settings = settings
                 self.segments = segments
 
                 
 
 
-            class Settings(object):
-                def __init__(self):
-                    self.mode = 0
+        class Settings(object):
+            def __init__(self,accuracy,sampleSize,mode):
+                self.accuracy = accuracy
+                self.sampleSize = sampleSize
+                self.mode = mode
+                    
                 
 
         class TreeLabel(QtWidgets.QLabel):
@@ -144,7 +149,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
             def deleteItem(self, row):
                 if row.parent() is None:
                     index = self.tree.indexOfTopLevelItem(row)
-                    self.tree.takeTopLevelItem(0)
+                    self.tree.takeTopLevelItem(index)
                 else:
                     parent = row.parent()
                     parent.removeChild(row)

@@ -295,11 +295,11 @@ def getFacesegments(verts,segmentSize,mode = 0):
             ignore += 1
         i += 1
 
-
+    
     return segmentsList
 
 def getLinesegments(line,segmentCount):
-
+    if segmentCount == 0: segmentCount = 1
     lst =[]
 
     p1 = line.p1
