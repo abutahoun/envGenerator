@@ -14,10 +14,15 @@ class randomizer(object):
         self.widgetItem = widgetItem
         self.globalSettings = globalSettings
 
+        self.accuracy = globalSettings.accuracy
+        self.sampleSize = globalSettings.sampleSize
+        self.useTexture = globalSettings.useTexture
+        self.colorThreshold = globalSettings.colorThreshold
+
 
         section = segments.Section(tree = widgetItem,poly= widgetItem.poly)
 
-
+        
         self.processSection(section)
 
         
@@ -33,50 +38,58 @@ class randomizer(object):
             if child.isItem:
                 children.append(child)
             else:
-                processSection(segments.Section(tree = child,segments=child.segments))
+                self.processSection(segments.Section(tree = child,segments=child.segments))
 
         if len(children) <= 0: return
         choice = numpy.random.choice(children)
-        print choice.poly
 
         if section.segments == []:
-            section = segments.getsegments(section.poly,1,False)[0]
-        
-        self.randomPoly(section,choice)
+            section = segments.getsegments(section.poly ,self.accuracy, self.sampleSize,self.useTexture,self.colorThreshold)[0]
+
+            #section = segments.getsegments(section.poly,accuracy,sampleSize,useTexture,colorThreshold)[0]
+
+        self.randomPoly(section,children)
 
 
     
     
 
-    def randomPoly(self, section, child):
-        #Todo: Add suport for Non Items
-        
-        
-        mode = child.parent().settings.mode
+    def randomPoly(self, section, children):
 
+        
+      
+        #mode = child.parent().settings.mode
+        #ToDo remove hardcode for Mode
+        mode = 0 
         if mode == 1:
             section.sort()
 
         newPoly = None
-        if child.isItem:
-            group = []
-            #for i in range(10):
-            Timer_Duplicate = 0.0
-            Timer_collision = 0.0
-            while len(section.keyList) > 0:
+
+        group = []
+        #for i in range(10):
+        Timer_Duplicate = 0.0
+        Timer_collision = 0.0
+        while len(section.keyList) > 0:
+            child = numpy.random.choice(children)
+            if child.isItem:
                 poly = child.poly
-                cmds.timer( s=True, n="d" )
+                #cmds.timer( s=True, n="d" )
                 newPoly = cmds.duplicate(poly)[0]
-                Timer_collision += cmds.timer( e=True, n="d" )
+                #Timer_collision += cmds.timer( e=True, n="d" )
                 bbox = cmds.exactWorldBoundingBox(newPoly)
 
                 #get keys that don't create collision
                 
-                cmds.timer( s=True, n="c" )
+                #cmds.timer( s=True, n="c" )
                 if mode == 0:
                     safeList = section.getSafeArea(newPoly)
-                    Timer_collision += cmds.timer( e=True, n="c" )
-                    if len(safeList) < 1: break
+                    #lap = cmds.timer(e=True , n="c")
+                    #Timer_collision += lap
+                    #print lap
+                    if len(safeList) < 1: 
+                        cmds.delete(newPoly)
+                        break
                     rand = numpy.random.choice(safeList)        #Random segment key from safeList
                 else:
                     safeList = section.getSafeArea(newPoly)
@@ -95,23 +108,24 @@ class randomizer(object):
                 bbox = cmds.exactWorldBoundingBox(newPoly)
                 section.addCollider(bbox)
                 group.append(newPoly)
+                section.removeKeys(bbox)
 
-                sectionList = []
-                if child.childCount() > 0: #Create section and tree for new poly
-                    if child.useTexture:
-                        sectionList = segments.getsegments(newPoly,1,True) #get sections using Texture
-                        for colorSection in sectionList:
-                            for j in range (child.childCount()):
-                                if colorSection.color == child.child(j).color: 
-                                    colorSection.tree = child.child(j)  #match Sction color to the tree child of the same color
-                                    processSection(colorSection) #Recursion
-                    else:
-                        newSection = segments.Section(poly=newPoly,tree=child)
-                        self.processSection(newSection) #Recursion
-            if len(group) > 0:
-                cmds.group(group)
-            print "duplicate Time:{0}".format(Timer_Duplicate)
-            print "collision Time:{0}".format(Timer_collision)
+            sectionList = []
+            if child.childCount() > 0: #Create section and tree for new poly
+                if child.useTexture:
+                    sectionList = segments.getsegments(newPoly,self.accuracy,self.sampleSize,self.useTexture,self.colorThreshold)
+                    for colorSection in sectionList:
+                        for j in range (child.childCount()):
+                            if colorSection.color == child.child(j).color: 
+                                colorSection.tree = child.child(j)  #match Sction color to the tree child of the same color
+                                processSection(colorSection) #Recursion
+                else:
+                    newSection = segments.Section(poly=newPoly,tree=child)
+                    self.processSection(newSection) #Recursion
+        if len(group) > 0:
+            cmds.group(group)
+        #print "duplicate Time:{0}".format(Timer_Duplicate)
+        #print "collision Time:{0}".format(Timer_collision)
         
 
 

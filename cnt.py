@@ -133,7 +133,7 @@ def addTreeChild(tree, title, widget,expand=False):
     
     tree.setItemWidget(title_row,0,label)
     tree.setItemWidget(widget_row,0,widget)
-
+    
 
 
     if expand: tree.expandItem(title_row)

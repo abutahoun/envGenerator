@@ -17,11 +17,10 @@ reload (envGen.segments)
 
 
 class TreeWidget(QtWidgets.QTreeWidget):
-        def __init__(self, parent = None):
+        def __init__(self, parent = None, UI = None):
         
             QtWidgets.QTreeWidget.__init__(self, parent)
-            self.useTextue = False
-
+            self.UI = UI
 
         def contextMenuEvent(self, event):
             contextMenu = QtWidgets.QMenu(self)
@@ -34,12 +33,18 @@ class TreeWidget(QtWidgets.QTreeWidget):
             action = contextMenu.exec_(self.viewport().mapToGlobal(event.pos()))
             
         def addItem(self, row = None):
+            accuracy = self.UI.globalSettings.accuracy
+            useTexture = self.UI.globalSettings.useTexture
+            sampleSize = self.UI.globalSettings.sampleSize
+            colorThreshold = self.UI.globalSettings.colorThreshold
+
+
             sel = cmds.ls(selection = True)
             sections = []
             #if len(sel) > 0:
             for poly in sel:
-                if self.useTextue:
-                    sections = envGen.segments.getsegments(poly,1,True)
+                if useTexture:
+                    sections = envGen.segments.getsegments(poly,accuracy,sampleSize,useTexture,colorThreshold)
                 
                 newRow = self.TreeWidgetItem(poly=poly)
                 
@@ -49,7 +54,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 else:
                     row.addChild(newRow)
                     if len(sections) > 1:newRow.useTexture = True
-
+                
                 polyItem_label = self.TreeLabel(poly,newRow)
                 self.setItemWidget(newRow,0,polyItem_label)
         
@@ -81,15 +86,15 @@ class TreeWidget(QtWidgets.QTreeWidget):
             pass
 
         class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
-            def __init__(self,segments=[],isItem = True,poly =None,color = None,useTexture = False):
+            def __init__(self,segments=[],isItem = True,poly =None,color = None):
                 QtWidgets.QTreeWidgetItem.__init__(self)
 
             
                 self.poly = poly
                 self.color = color
                 self.isItem = isItem
-                self.useTexture = useTexture
                 self.settings = self.Settings()
+                self.segments = segments
 
                 
 

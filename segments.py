@@ -9,9 +9,12 @@ reload (cnt)
 
 
 
-def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
+def getsegments(poly,accuracy = 1, sample=50, useTexture = True,colorThreshold=10):
+    #ToDo:
+    # reduce segmant list randomly
+
+
     # get edges segments
-    segmentDensity = 2
   
     tri = cmds.duplicate(poly)
 
@@ -23,10 +26,13 @@ def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
     ignoreEdge = []
 
     polyArea = cmds.polyEvaluate(poly,wa = 1) 
-    segmentSize = math.sqrt(polyArea) / (50 * segmentDensity)
+    segmentSize = math.sqrt(polyArea) / (50 * accuracy)
     
 
     #create segments for edges
+    
+    #ToDo:
+    #Auto adjust accuracy depending on face sizes
     for i in range (cmds.polyEvaluate(tri,e=1)):
         edge = '%s.e[%s]'%(tri[0],i)
         edgeFace = cmds.polyListComponentConversion(edge,fe=True,tf=True)[0]
@@ -67,7 +73,7 @@ def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
         for s in getLinesegments(line,size):
             segmentList.append(Segment(s, normal))
 
-    
+
     #crete segments for inner face without edges
 
     for i in range(cmds.polyEvaluate(tri,f=1)):
@@ -84,11 +90,22 @@ def getsegments(poly,segmentDensity = 1, useTexture = True, colorThreshold=100):
             segmentList.append(Segment(s, normal))
             
 
-    # delete tringualted Poly
+    
+    
 
+
+    #reduce segmnets to sample size
+    numpy.random.shuffle(segmentList)
+    sampleSize = (sample/100.0) * len(segmentList)
+    print "segmants Length: {0}".format(len(segmentList))
+    print "sampleSize: {0}".format(sampleSize)
+    segmentList = numpy.random.choice(segmentList,sampleSize)
+    segmentList = segmentList.tolist() #convert numpy list
 
     
-        
+
+
+    # delete tringualted Poly
     cmds.delete(tri) 
     colorDict = {}
     sectionList = []
@@ -350,7 +367,7 @@ class Section(object):
 
 
     def removeKeys(self,bbox):
-        self.keyList[:] = [x for x in self.keyList if not cnt.inBbox(bbox,self.segmentsDict[x].location,[0.1,0.1,0.1])]
+        self.keyList[:] = [x for x in self.keyList if not cnt.inBbox(bbox,self.segmentsDict[x].location,[1,1,1])]
 
     def getBbox(self,segments):
     #sort and save Min and Max
