@@ -40,7 +40,7 @@ class envGenUI(QtWidgets.QWidget):
         super(envGenUI,self).__init__()
 
         self.setObjectName(self.__class__.UI_NAME)
-        self.setMinimumSize(400,400)
+        self.setMinimumSize(400,700)
 
 
         self.createWidgets()
@@ -49,6 +49,8 @@ class envGenUI(QtWidgets.QWidget):
         self.createWorkspaceControl()
 
         self.globalSettings = self.GlobalSettings(1,10,True,10)
+
+        self.loadingItems = False
         
 
 
@@ -104,6 +106,23 @@ class envGenUI(QtWidgets.QWidget):
         self.settings_Mode.addItem("Scatter",userData= 0)
         self.settings_Mode.addItem("Tiles",userData= 1)
 
+        #Rotate SpinBoxs
+        self.spinBox_R = []
+        for i in range(6):
+            spinBox = QtWidgets.QDoubleSpinBox()
+            spinBox.valueChanged.connect(self.itemSettingsChanged)
+            self.spinBox_R.append(spinBox)
+
+        #scale SpinBoxes
+        self.spinBox_S = []
+        for i in range(6):
+            spinBox = QtWidgets.QDoubleSpinBox()
+            spinBox.setSingleStep(0.1)
+            spinBox.valueChanged.connect(self.itemSettingsChanged)
+            self.spinBox_S.append(spinBox)
+
+
+
         #follow Normals
         #Rotation
         #Scale
@@ -146,7 +165,7 @@ class envGenUI(QtWidgets.QWidget):
         box_accuracy.addWidget(self.gs_Accuracy)
         box_accuracy.addWidget(QtWidgets.QLabel("Sample%"))
         box_accuracy.addWidget(self.gs_sample)
-        #box_accuracy.addStretch()
+        box_accuracy.addStretch()
         group_accuracy.setLayout(box_accuracy)
 
 
@@ -170,7 +189,7 @@ class envGenUI(QtWidgets.QWidget):
         gnTreeBox.addWidget(self.genTree)
         group_genTree = QtWidgets.QGroupBox()
         group_genTree.setLayout(gnTreeBox)
-        #group_genTree.setMinimumHeight(900)
+        group_genTree.setMinimumHeight(200) #set GenTree Height
 
         #Item_Settings
         settingForm_layout = QtWidgets.QFormLayout()
@@ -179,15 +198,102 @@ class envGenUI(QtWidgets.QWidget):
         settingForm_layout.addRow("Mode: ",self.settings_Mode)
         setting_Layout.addLayout(settingForm_layout)
 
+        group_itemSettings_1 = QtWidgets.QGroupBox("")
+        box_itemSettings_1 = QtWidgets.QHBoxLayout()
+        box_itemSettings_1.addWidget(QtWidgets.QLabel("Accuracy: "))
+        box_itemSettings_1.addWidget(self.settings_Accuracy)
+        box_itemSettings_1.addWidget(QtWidgets.QLabel("Sample%: "))
+        box_itemSettings_1.addWidget(self.settings_Sample)
+        box_itemSettings_1.addStretch()
+        box_itemSettings_1.addWidget(QtWidgets.QLabel("Mode: "))
+        box_itemSettings_1.addWidget(self.settings_Mode)
 
-        settings_group = QtWidgets.QGroupBox()
-        settings_group.setLayout(setting_Layout)
+        #Rotate 
+        group_itemSettings_R = QtWidgets.QGroupBox("Rotate")
+        group_itemSettings_R_X = QtWidgets.QGroupBox("X")
+        group_itemSettings_R_Y = QtWidgets.QGroupBox("Y")
+        group_itemSettings_R_Z = QtWidgets.QGroupBox("Z")
+        box_itemSettings_R_X = QtWidgets.QVBoxLayout()
+        box_itemSettings_R_Y = QtWidgets.QVBoxLayout()
+        box_itemSettings_R_Z = QtWidgets.QVBoxLayout()
+        box_itemSettings_R = QtWidgets.QHBoxLayout()
 
+        group_itemSettings_R_X.setLayout(box_itemSettings_R_X)
+        group_itemSettings_R_Y.setLayout(box_itemSettings_R_Y)
+        group_itemSettings_R_Z.setLayout(box_itemSettings_R_Z)
+        box_itemSettings_R.addWidget(group_itemSettings_R_X)
+        box_itemSettings_R.addWidget(group_itemSettings_R_Y)
+        box_itemSettings_R.addWidget(group_itemSettings_R_Z)
+        box_itemSettings_R.addStretch()
+        box_itemSettings_R_X.addWidget(QtWidgets.QLabel("+"))
+        box_itemSettings_R_X.addWidget(self.spinBox_R[0])
+        box_itemSettings_R_X.addWidget(QtWidgets.QLabel("-"))
+        box_itemSettings_R_X.addWidget(self.spinBox_R[1] )
+        box_itemSettings_R_Y.addWidget(QtWidgets.QLabel("+"))
+        box_itemSettings_R_Y.addWidget(self.spinBox_R[2])
+        box_itemSettings_R_Y.addWidget(QtWidgets.QLabel("-"))
+        box_itemSettings_R_Y.addWidget(self.spinBox_R[3])
+        box_itemSettings_R_Z.addWidget(QtWidgets.QLabel("+"))
+        box_itemSettings_R_Z.addWidget(self.spinBox_R[4])
+        box_itemSettings_R_Z.addWidget(QtWidgets.QLabel("-"))
+        box_itemSettings_R_Z.addWidget(self.spinBox_R[5])
+
+        #Scale
+        group_itemSettings_S = QtWidgets.QGroupBox("Scale")
+        group_itemSettings_S_X = QtWidgets.QGroupBox("X")
+        group_itemSettings_S_Y = QtWidgets.QGroupBox("Y")
+        group_itemSettings_S_Z = QtWidgets.QGroupBox("Z")
+        box_itemSettings_S_X = QtWidgets.QVBoxLayout()
+        box_itemSettings_S_Y = QtWidgets.QVBoxLayout()
+        box_itemSettings_S_Z = QtWidgets.QVBoxLayout()
+        box_itemSettings_S = QtWidgets.QHBoxLayout()
+
+        group_itemSettings_S_X.setLayout(box_itemSettings_S_X)
+        group_itemSettings_S_Y.setLayout(box_itemSettings_S_Y)
+        group_itemSettings_S_Z.setLayout(box_itemSettings_S_Z)
+        box_itemSettings_S.addWidget(group_itemSettings_S_X)
+        box_itemSettings_S.addWidget(group_itemSettings_S_Y)
+        box_itemSettings_S.addWidget(group_itemSettings_S_Z)
+        box_itemSettings_S.addStretch()
+        box_itemSettings_S_X.addWidget(QtWidgets.QLabel("+"))
+        box_itemSettings_S_X.addWidget(self.spinBox_S[0])
+        box_itemSettings_S_X.addWidget(QtWidgets.QLabel("-"))
+        box_itemSettings_S_X.addWidget(self.spinBox_S[1] )
+        box_itemSettings_S_Y.addWidget(QtWidgets.QLabel("+"))
+        box_itemSettings_S_Y.addWidget(self.spinBox_S[2])
+        box_itemSettings_S_Y.addWidget(QtWidgets.QLabel("-"))
+        box_itemSettings_S_Y.addWidget(self.spinBox_S[3])
+        box_itemSettings_S_Z.addWidget(QtWidgets.QLabel("+"))
+        box_itemSettings_S_Z.addWidget(self.spinBox_S[4])
+        box_itemSettings_S_Z.addWidget(QtWidgets.QLabel("-"))
+        box_itemSettings_S_Z.addWidget(self.spinBox_S[5])
+
+        
+        
+
+
+
+
+        group_itemSettings_R.setStyleSheet("QGroupBox{border:2px solid gray;border-radius:5px;margin-top: 1ex;} QGroupBox::title{subcontrol-origin: margin;subcontrol-position:top left;padding:0 3px;}")
+        group_itemSettings_S.setStyleSheet("QGroupBox{border:2px solid gray;border-radius:5px;margin-top: 1ex;} QGroupBox::title{subcontrol-origin: margin;subcontrol-position:top left;padding:0 3px;}")
+
+
+        group_itemSettings_1.setLayout(box_itemSettings_1)
+        group_itemSettings_R.setLayout(box_itemSettings_R)
+        group_itemSettings_S.setLayout(box_itemSettings_S)
+
+        settings_Layout = QtWidgets.QVBoxLayout()
+        settings_Layout.addWidget(group_itemSettings_1)
+        settings_Layout.addWidget(group_itemSettings_R)
+        settings_Layout.addWidget(group_itemSettings_S)
+        self.settings_group = QtWidgets.QGroupBox()
+        self.settings_group.setLayout(settings_Layout)
+        self.settings_group.setEnabled(False)
 
         #Main Tree Childs
         cnt.addTreeChild(main_tree,"Global Settings",global_group,expand=True)
         cnt.addTreeChild(main_tree,"GenTree",group_genTree,expand=True)
-        cnt.addTreeChild(main_tree,"Settings",settings_group,expand=True)
+        cnt.addTreeChild(main_tree,"Settings",self.settings_group,expand=True)
 
         
         
@@ -237,45 +343,63 @@ class envGenUI(QtWidgets.QWidget):
 
         #loop through top level items
         for i in range (self.genTree.topLevelItemCount()):
+            
             widgetItem = self.genTree.topLevelItem(i)
             treeLabel = self.genTree.itemWidget(widgetItem,0)
-
-
-            #envGen.randomize.randomize(widgetItem, self.globalSettings)
             randomizer(widgetItem, self.globalSettings)
 
 
     def globalSettingsChanged(self):
-        print "changed"
         self.globalSettings.useTexture = self.gs_UseTexture.isChecked()
         self.globalSettings.accuracy = self.gs_Accuracy.value()
         self.globalSettings.colorThreshold = self.gs_colorThreshold.value()
         self.globalSettings.sampleSize = self.gs_sample.value()
 
-    def genTree_selectionChanged(self):
 
-        item = self.genTree.selectedItems()[0]
-        self.settings_Label.setText(item.poly)
-        self.loadItemSettings(item)
+
+    def genTree_selectionChanged(self):
+        if len(self.genTree.selectedItems()) == 0:
+            self.settings_group.setEnabled(False)
+        else:
+            item = self.genTree.selectedItems()[0]
+            self.settings_Label.setText(item.poly)
+            self.loadItemSettings(item)
+            self.settings_group.setEnabled(True)
+        
 
 
     def itemSettingsChanged(self):
-
+        if self.loadingItems: return
+        if len(self.genTree.selectedItems()) <= 0: return
         item = self.genTree.selectedItems()[0]
+        
         item.settings.mode = self.settings_Mode.currentData()
         item.settings.accuracy = self.settings_Accuracy.value()
         item.settings.sampleSize = self.settings_Sample.value()
-
-
+        rotate = []
+        scale = []
+        for i in range(6):
+            rotate.append(self.spinBox_R[i].value())
+            scale.append(self.spinBox_S[i].value())
+        item.settings.rotate = rotate[:]
+        item.settings.scale = scale[:]
 
 #endregion
 
     def loadItemSettings(self, item):
+        self.loadingItems = True
         index = self.settings_Mode.findData(item.settings.mode)
         self.settings_Mode.setCurrentIndex(index)
 
         self.settings_Accuracy.setValue(item.settings.accuracy)
         self.settings_Sample.setValue(item.settings.sampleSize)
+
+        for i in range(6):
+            self.spinBox_R[i].setValue(item.settings.rotate[i])
+            self.spinBox_S[i].setValue(item.settings.scale[i])
+
+        self.loadingItems = False
+
 
     class GlobalSettings(object):
         def __init__(self, accuracy,sampleSize,useTexture,colorThreshold):

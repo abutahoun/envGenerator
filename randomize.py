@@ -52,8 +52,7 @@ class randomizer(object):
 
         self.randomPoly(section,children)
         
-        t  = threading.Thread(target=do_in_main, args=())
-        t.start()
+        
 
     
     
@@ -74,15 +73,19 @@ class randomizer(object):
         #for i in range(10):
         Timer_Duplicate = 0.0
         Timer_collision = 0.0
+
         while len(section.keyList) > 0:
             child = numpy.random.choice(children)
             if child.isItem:
                 poly = child.poly
+                
                 #cmds.timer( s=True, n="d" )
 
                 newPoly = cmds.duplicate(poly)[0]
+                cmds.makeIdentity(newPoly, apply = True, t=1, r=1, s=1)
                 #Timer_collision += cmds.timer( e=True, n="d" )
                 bbox = cmds.exactWorldBoundingBox(newPoly)
+
 
                 #get keys that don't create collision
                 
@@ -127,12 +130,15 @@ class randomizer(object):
                 else:
                     newSection = segments.Section(poly=newPoly,tree=child)
                     self.processSection(newSection) #Recursion
+                
+            cmds.refresh()
         if len(group) > 0:
             cmds.group(group)
-        #print "duplicate Time:{0}".format(Timer_Duplicate)
-        #print "collision Time:{0}".format(Timer_collision)
+            #print "duplicate Time:{0}".format(Timer_Duplicate)
+            #print "collision Time:{0}".format(Timer_collision)
         
     
+
 
 def randomize1(segmentList,poly=[],folder=[],buffer = [0,0,0],rSx=[1,1],rSy=[1,1],rSz=[1,1],
 Normals = True,mode = 1):

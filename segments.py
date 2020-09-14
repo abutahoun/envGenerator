@@ -367,7 +367,8 @@ class Section(object):
 
 
     def removeKeys(self,bbox):
-        self.keyList[:] = [x for x in self.keyList if not cnt.inBbox(bbox,self.segmentsDict[x].location,[1,1,1])]
+        scale = [abs(bbox[3]-bbox[0])/2,abs(bbox[4]-bbox[1])/2,abs(bbox[5]-bbox[2])/2]
+        self.keyList[:] = [x for x in self.keyList if not cnt.inBbox(bbox,self.segmentsDict[x].location,scale)]
 
     def getBbox(self,segments):
     #sort and save Min and Max

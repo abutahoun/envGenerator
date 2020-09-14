@@ -14,6 +14,8 @@ from maya import cmds
 from array import array
 import ctypes
 
+import pymel
+
 def getColor(segmantList,poly):
 
     MPoly = om.MGlobal.getSelectionListByName(poly)
@@ -137,3 +139,10 @@ def addTreeChild(tree, title, widget,expand=False):
 
 
     if expand: tree.expandItem(title_row)
+
+def isGroup(node):
+    children = node.getChildren()
+    for child in children:
+        if type(child) is not pymel.core.nodetypes.Transform:
+            return False
+    return True

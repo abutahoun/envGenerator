@@ -1,9 +1,13 @@
 from PySide2 import QtCore
 from PySide2 import QtWidgets
 from PySide2 import QtGui
+from maya.api import OpenMaya as om
 from maya import cmds
-
+import pymel.core
 from functools import partial
+
+import cnt
+reload(cnt)
 
 import envGen.randomize
 reload(envGen.randomize)
@@ -38,41 +42,49 @@ class TreeWidget(QtWidgets.QTreeWidget):
             sampleSize = self.UI.globalSettings.sampleSize
             colorThreshold = self.UI.globalSettings.colorThreshold
 
-            settings = self.Settings(accuracy,sampleSize,0)
 
 
-            sel = cmds.ls(selection = True)
+
+
+            sel = pymel.core.ls(selection=True, transforms=True)
+
+
             sections = []
-            #if len(sel) > 0:
-            for poly in sel:
-                if useTexture:
-                    sections = envGen.segments.getsegments(poly,accuracy,sampleSize,useTexture,colorThreshold)
+            if len(sel) > 0:
+                for item in sel:
+                    poly = str(item)
+                    if cnt.isGroup(item):
+                        newRow = self.TreeWidgetItem(poly=poly,isGroup =True,settings = self.Settings(accuracy,sampleSize,0,[0,0,0,0,0,0],[0,0,0,0,0,0]))
+                        if (row): row.addChild(newRow)
+                    else:
+                        if useTexture:
+                            sections = envGen.segments.getsegments(poly,accuracy,sampleSize,useTexture,colorThreshold)
+                        
+                        newRow = self.TreeWidgetItem(poly=poly, settings = self.Settings(accuracy,sampleSize,0,[0,0,0,0,0,0],[0,0,0,0,0,0]))
+                        
+                        if (not row):
+                            self.insertTopLevelItem(0,newRow)
+                            newRow.isItem = False
+                        else:
+                            row.addChild(newRow)
+                            if len(sections) > 1:newRow.useTexture = True
+                        
+                    polyItem_label = self.TreeLabel(poly,newRow)
+                    self.setItemWidget(newRow,0,polyItem_label)
                 
-                newRow = self.TreeWidgetItem(poly=poly,settings = settings)
-                
-                if (not row):
-                    self.insertTopLevelItem(0,newRow)
-                    newRow.isItem = False
-                else:
-                    row.addChild(newRow)
-                    if len(sections) > 1:newRow.useTexture = True
-                
-                polyItem_label = self.TreeLabel(poly,newRow)
-                self.setItemWidget(newRow,0,polyItem_label)
-        
 
-                if len(sections) > 1:
-                #Add colors as childs
-                    for section in sections:
-                        
-                        color = QtGui.QColor(section.color)
-                        colorRow = self.TreeWidgetItem(section.segments,isItem = False,color =color,settings = settings)
-                        colorRow.setBackgroundColor(0,color)
-                        colorLabel =self.TreeLabel("",colorRow)
-                        colorLabel.setMargin(10)
-                        newRow.addChild(colorRow)
-                        self.setItemWidget(colorRow,0,colorLabel)
-                        
+                    if len(sections) > 1:
+                    #Add colors as childs
+                        for section in sections:
+                            
+                            color = QtGui.QColor(section.color)
+                            colorRow = self.TreeWidgetItem(section.segments,isItem = False,color =color,settings = self.Settings(accuracy,sampleSize,0,[0,0,0,0,0,0],[0,0,0,0,0,0]))
+                            colorRow.setBackgroundColor(0,color)
+                            colorLabel =self.TreeLabel("",colorRow)
+                            colorLabel.setMargin(10)
+                            newRow.addChild(colorRow)
+                            self.setItemWidget(colorRow,0,colorLabel)
+                            
 
 
 
@@ -84,11 +96,10 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 "Nothing Selected"
         
 
-        def deleteItem(self,row):
-            pass
+ 
 
         class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
-            def __init__(self,segments=[],isItem = True,poly =None,color = None,settings = None):
+            def __init__(self,segments=[],isItem = True,poly =None,color = None, isGroup = False,settings = None):
                 QtWidgets.QTreeWidgetItem.__init__(self)
 
             
@@ -97,16 +108,18 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 self.isItem = isItem
                 self.settings = settings
                 self.segments = segments
-
+                self.isGroup = isGroup
                 
 
 
         class Settings(object):
-            def __init__(self,accuracy,sampleSize,mode):
+            def __init__(self,accuracy,sampleSize,mode,rotate,scale):
                 self.accuracy = accuracy
                 self.sampleSize = sampleSize
                 self.mode = mode
-                    
+                self.scale = scale
+                self.rotate = rotate
+                        
                 
 
         class TreeLabel(QtWidgets.QLabel):
@@ -128,10 +141,10 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 
                 contextMenu = QtWidgets.QMenu(self)
 
-
-                add_action = QtWidgets.QAction('Add Selected Item', self)
-                contextMenu.addAction(add_action)
-                add_action.triggered.connect(partial(self.row.treeWidget().addItem,self.row))
+                if not self.row.isGroup:
+                    add_action = QtWidgets.QAction('Add Selected Item', self)
+                    contextMenu.addAction(add_action)
+                    add_action.triggered.connect(partial(self.row.treeWidget().addItem,self.row))
 
                 deleteAction = QtWidgets.QAction('Delete', self)
                 contextMenu.addAction(deleteAction)
