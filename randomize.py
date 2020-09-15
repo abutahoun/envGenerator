@@ -78,12 +78,29 @@ class randomizer(object):
             child = numpy.random.choice(children)
             if child.isItem:
                 poly = child.poly
-                
+                scale = child.settings.scale
+                rotate = child.settings.rotate
                 #cmds.timer( s=True, n="d" )
 
                 newPoly = cmds.duplicate(poly)[0]
                 cmds.makeIdentity(newPoly, apply = True, t=1, r=1, s=1)
                 #Timer_collision += cmds.timer( e=True, n="d" )
+
+
+
+                #genrate random scale and rotation values based on item settings
+                rndScale = []
+                rndRotate = []
+                for i in range(0,6,2):
+                    valueS = ((numpy.random.uniform(scale[i+1]*-1,scale[i]))+1)
+                    valueR = ((numpy.random.uniform(rotate[i+1]*-1,rotate[i])))
+                    if valueS < 0.1 and valueS > -0.1: valueS = 0.1
+                    rndScale.append(valueS)
+                    rndRotate.append(valueR)
+
+                cmds.scale(rndScale[0],rndScale[1],rndScale[2],newPoly,r=1)
+                cmds.rotate(rndRotate[0],rndRotate[1],rndRotate[2],newPoly,r=1)
+                print rndRotate
                 bbox = cmds.exactWorldBoundingBox(newPoly)
 
 
@@ -110,7 +127,7 @@ class randomizer(object):
 
                 #cmds.move(bbox[3],bbox[1], bbox[5], '%s.scalePivot' % mesh,"%s.rotatePivot"% mesh, ws=True) #Move Pivot
                 cmds.move(segment.location[0],segment.location[1],segment.location[2],newPoly,ws = 1,rpr=1)
-                cmds.rotate(segment.rotation[0],segment.rotation[1],segment.rotation[2],newPoly)
+                cmds.rotate(segment.rotation[0],segment.rotation[1],segment.rotation[2],newPoly,r=1)
 
                 #recalculate Bounding Box
                 bbox = cmds.exactWorldBoundingBox(newPoly)

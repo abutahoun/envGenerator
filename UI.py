@@ -209,7 +209,7 @@ class envGenUI(QtWidgets.QWidget):
         box_itemSettings_1.addWidget(self.settings_Mode)
 
         #Rotate 
-        group_itemSettings_R = QtWidgets.QGroupBox("Rotate")
+        group_itemSettings_R = QtWidgets.QGroupBox("Random Rotation Range")
         group_itemSettings_R_X = QtWidgets.QGroupBox("X")
         group_itemSettings_R_Y = QtWidgets.QGroupBox("Y")
         group_itemSettings_R_Z = QtWidgets.QGroupBox("Z")
@@ -239,7 +239,7 @@ class envGenUI(QtWidgets.QWidget):
         box_itemSettings_R_Z.addWidget(self.spinBox_R[5])
 
         #Scale
-        group_itemSettings_S = QtWidgets.QGroupBox("Scale")
+        group_itemSettings_S = QtWidgets.QGroupBox("Random Scale Range")
         group_itemSettings_S_X = QtWidgets.QGroupBox("X")
         group_itemSettings_S_Y = QtWidgets.QGroupBox("Y")
         group_itemSettings_S_Z = QtWidgets.QGroupBox("Z")
