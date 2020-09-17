@@ -15,7 +15,6 @@ def getsegments(poly,accuracy = 1, sample=50, useTexture = True,colorThreshold=1
 
 
     # get edges segments
-  
     tri = cmds.duplicate(poly)
 
     cmds.polyTriangulate(tri)
@@ -97,8 +96,6 @@ def getsegments(poly,accuracy = 1, sample=50, useTexture = True,colorThreshold=1
     #reduce segmnets to sample size
     numpy.random.shuffle(segmentList)
     sampleSize = (sample/100.0) * len(segmentList)
-    print "segmants Length: {0}".format(len(segmentList))
-    print "sampleSize: {0}".format(sampleSize)
     segmentList = numpy.random.choice(segmentList,sampleSize)
     segmentList = segmentList.tolist() #convert numpy list
 
@@ -409,9 +406,7 @@ class Section(object):
     def addCollider(self,bbox):
         self.colliders.append(bbox)
 
-    def getSafeArea(self,poly):
-
-            
+    def getSafeArea(self,poly):  
         box = cmds.exactWorldBoundingBox(poly)
         
         

@@ -37,10 +37,12 @@ class TreeWidget(QtWidgets.QTreeWidget):
             action = contextMenu.exec_(self.viewport().mapToGlobal(event.pos()))
             
         def addItem(self, row = None):
+            rows = self.selectedItems()
             accuracy = self.UI.globalSettings.accuracy
             useTexture = self.UI.globalSettings.useTexture
             sampleSize = self.UI.globalSettings.sampleSize
             colorThreshold = self.UI.globalSettings.colorThreshold
+            collision = self.UI.globalSettings.collision
 
 
 
@@ -54,20 +56,24 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 for item in sel:
                     poly = str(item)
                     if cnt.isGroup(item):
-                        newRow = self.TreeWidgetItem(poly=poly,isGroup =True,settings = self.Settings(accuracy,sampleSize,0,[0,0,0,0,0,0],[0,0,0,0,0,0]))
+                        newRow = self.TreeWidgetItem(poly=poly,isGroup =True,settings = self.Settings(accuracy,sampleSize,collision,useTexture,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True))
                         if (row): row.addChild(newRow)
                     else:
                         if useTexture:
                             sections = envGen.segments.getsegments(poly,accuracy,sampleSize,useTexture,colorThreshold)
                         
-                        newRow = self.TreeWidgetItem(poly=poly, settings = self.Settings(accuracy,sampleSize,0,[0,0,0,0,0,0],[0,0,0,0,0,0]))
+                        newRow = self.TreeWidgetItem(poly=poly, settings = self.Settings(accuracy,sampleSize,collision,useTexture,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True))
                         
                         if (not row):
                             self.insertTopLevelItem(0,newRow)
                             newRow.isItem = False
                         else:
-                            row.addChild(newRow)
-                            if len(sections) > 1:newRow.useTexture = True
+                            for row in rows:
+                                row.addChild(newRow)
+                                if len(sections) > 1:
+                                    newRow.settings.useTexture = True
+                                else:
+                                    newRow.settings.useTexture = False
                         
                     polyItem_label = self.TreeLabel(poly,newRow)
                     self.setItemWidget(newRow,0,polyItem_label)
@@ -78,7 +84,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                         for section in sections:
                             
                             color = QtGui.QColor(section.color)
-                            colorRow = self.TreeWidgetItem(section.segments,isItem = False,color =color,settings = self.Settings(accuracy,sampleSize,0,[0,0,0,0,0,0],[0,0,0,0,0,0]))
+                            colorRow = self.TreeWidgetItem(section.segments,isItem = False,color =color,settings = self.Settings(accuracy,sampleSize,collision,useTexture,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True))
                             colorRow.setBackgroundColor(0,color)
                             colorLabel =self.TreeLabel("",colorRow)
                             colorLabel.setMargin(10)
@@ -113,13 +119,15 @@ class TreeWidget(QtWidgets.QTreeWidget):
 
 
         class Settings(object):
-            def __init__(self,accuracy,sampleSize,mode,rotate,scale):
+            def __init__(self,accuracy,sampleSize,collision,useTexture,mode,rotate,scale,fast):
                 self.accuracy = accuracy
                 self.sampleSize = sampleSize
                 self.mode = mode
                 self.scale = scale
                 self.rotate = rotate
-                        
+                self.collision = collision
+                self.useTexture = useTexture
+                self.fast = fast
                 
 
         class TreeLabel(QtWidgets.QLabel):
