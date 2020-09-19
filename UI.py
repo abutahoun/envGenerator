@@ -388,21 +388,21 @@ class envGenUI(QtWidgets.QWidget):
     def itemSettingsChanged(self):
         if self.loadingItems: return
         if len(self.genTree.selectedItems()) <= 0: return
-        item = self.genTree.selectedItems()[0]
         
-        item.settings.mode = self.settings_Mode.currentData()
-        item.settings.accuracy = self.settings_Accuracy.value()
-        item.settings.sampleSize = self.settings_Sample.value()
-        item.settings.collision = self.settings_collision.isChecked()
-        item.settings.fast = self.settings_fastCollision.isChecked()
-        
-        rotate = []
-        scale = []
-        for i in range(6):
-            rotate.append(self.spinBox_R[i].value())
-            scale.append(self.spinBox_S[i].value())
-        item.settings.rotate = rotate[:]
-        item.settings.scale = scale[:]
+        for item in self.genTree.selectedItems():
+            item.settings.mode = self.settings_Mode.currentData()
+            item.settings.accuracy = self.settings_Accuracy.value()
+            item.settings.sampleSize = self.settings_Sample.value()
+            item.settings.collision = self.settings_collision.isChecked()
+            item.settings.fast = self.settings_fastCollision.isChecked()
+            
+            rotate = []
+            scale = []
+            for i in range(6):
+                rotate.append(self.spinBox_R[i].value())
+                scale.append(self.spinBox_S[i].value())
+            item.settings.rotate = rotate[:]
+            item.settings.scale = scale[:]
 
 #endregion
 
