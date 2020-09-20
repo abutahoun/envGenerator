@@ -131,7 +131,7 @@ def getsegments(poly,accuracy = 1, sample=50, useTexture = True,colorThreshold=1
         sectionList.append(Section(segmentList))
 
 
-    
+
     return sectionList
 
 

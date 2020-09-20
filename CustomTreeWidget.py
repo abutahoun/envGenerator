@@ -102,6 +102,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
 
                                 polyItem_label = self.TreeLabel(poly,newRow)
                                 self.setItemWidget(newRow,0,polyItem_label)
+                                del(newRow)
 
 
                     if len(sections) > 1:
@@ -133,8 +134,10 @@ class TreeWidget(QtWidgets.QTreeWidget):
             def __init__(self,segments=[],isItem = True,poly =None,color = None, isGroup = False,settings = None):
                 QtWidgets.QTreeWidgetItem.__init__(self)
 
-
-                self.poly = poly
+                if poly is None:
+                   self.poly = color.name()
+                else:
+                    self.poly = poly
                 self.color = color
                 self.isItem = isItem
                 self.settings = settings

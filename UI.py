@@ -51,14 +51,15 @@ class envGenUI(QtWidgets.QWidget):
         self.globalSettings = self.GlobalSettings(1,10,True,10,True)
 
         self.loadingItems = False
-        
+        self.isRunning = False
 
 
 
     def createWidgets(self):
 
-
+        self.progressBar = QtWidgets.QProgressBar()
         self.generate_btn = QtWidgets.QPushButton("Generate")
+        self.cancel_btn = QtWidgets.QPushButton("Cancel")
 
 
 
@@ -130,6 +131,8 @@ class envGenUI(QtWidgets.QWidget):
             spinBox.valueChanged.connect(self.itemSettingsChanged)
             self.spinBox_S.append(spinBox)
 
+
+        
 
 
         #follow Normals
@@ -311,21 +314,26 @@ class envGenUI(QtWidgets.QWidget):
 
         
         
+        bottom_layout = QtWidgets.QVBoxLayout()
+        bottom_layout.addWidget(self.progressBar)
 
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addStretch()
+        button_layout.addWidget(self.cancel_btn)
         button_layout.addWidget(self.generate_btn)
+        
 
-
+        bottom_layout.addLayout(button_layout)
 
 
         #main_Layout.addLayout(form_layout)
         main_Layout.addWidget(main_tree)
-        main_Layout.addLayout(button_layout)
+        main_Layout.addLayout(bottom_layout)
 
 
     def createConnection(self):
         self.generate_btn.clicked.connect(self.generate)
+        self.cancel_btn.clicked.connect(self.cancel)
         self.gs_UseTexture.toggled.connect(self.globalSettingsChanged)
         self.gs_Accuracy.valueChanged.connect(self.globalSettingsChanged)
         self.gs_sample.valueChanged.connect(self.globalSettingsChanged)
@@ -347,13 +355,6 @@ class envGenUI(QtWidgets.QWidget):
 
 
 
-
-
-
-
-
-
-
 #region Slots
     def generate(self):
 
@@ -363,6 +364,9 @@ class envGenUI(QtWidgets.QWidget):
             widgetItem = self.genTree.topLevelItem(i)
             treeLabel = self.genTree.itemWidget(widgetItem,0)
             randomizer(widgetItem, self.globalSettings)
+    
+    def cancel(self):
+        self.isRunning = False
 
 
     def globalSettingsChanged(self):
@@ -403,6 +407,8 @@ class envGenUI(QtWidgets.QWidget):
                 scale.append(self.spinBox_S[i].value())
             item.settings.rotate = rotate[:]
             item.settings.scale = scale[:]
+
+            
 
 #endregion
 

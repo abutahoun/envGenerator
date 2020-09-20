@@ -51,10 +51,10 @@ def getColor(segmantList,poly):
         location = segmant.location
         vector = om.MVector(location[0],location[1],location[2])
         point = om.MPoint(vector)
-        u,v,w = mesh.getUVAtPoint(point,4)
-        uColArray.set(u, 0)  
-        vColArray.set(v, 0) 
         try:
+            u,v,w = mesh.getUVAtPoint(point,4)
+            uColArray.set(u, 0)  
+            vColArray.set(v, 0) 
             omfx.MDynamicsUtil.evalDynamics2dTexture(imgObj, attr, uColArray, vColArray, outColours, outAlphas)  
         except:
             print "Unable to sample current Shading Node"

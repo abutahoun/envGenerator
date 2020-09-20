@@ -7,6 +7,7 @@ import cnt
 reload (cnt)
 import segments
 reload (segments)
+from PySide2 import QtCore
 
 
 
@@ -25,15 +26,27 @@ class randomizer(object):
 
         section = segments.Section(tree = widgetItem,poly= widgetItem.poly)
 
-        
-        self.processSection(section)
+        self.UI = widgetItem.treeWidget().UI
+        self.UI.isRunning = True
 
+        self.trackedPoly = None
+
+        self.processSection(section)
         
-        
+
     
 
     def processSection(self, section):
+        self.running = True
         tree = section.tree
+
+
+        self.accuracy = tree.settings.accuracy
+        self.sampleSize = tree.settings.sampleSize
+
+
+
+        
         if tree.childCount() == 0:return
 
         children = [] 
@@ -51,6 +64,8 @@ class randomizer(object):
             section = segments.getsegments(section.poly ,self.accuracy, self.sampleSize,self.useTexture,self.colorThreshold)[0]
 
 
+
+
         self.randomPoly(section,children)
         
         
@@ -60,8 +75,12 @@ class randomizer(object):
 
     def randomPoly(self, section, children):
 
-        
-      
+        if self.trackedPoly is None:
+            self.trackedPoly = children[0].parent().poly
+            self.UI.progressBar.setRange(0,len(section.keyList))
+            
+
+
         mode = children[0].parent().settings.mode
         #ToDo remove hardcode for Mode
  
@@ -69,11 +88,14 @@ class randomizer(object):
             section.sort()
 
         newPoly = None
+        
 
 
         #for i in range(10):
         Timer_Duplicate = 0.0
         Timer_collision = 0.0
+        lenKeyList = len(section.keyList)
+
 
         while len(section.keyList) > 0:
             child = numpy.random.choice(children)
@@ -150,7 +172,7 @@ class randomizer(object):
                 section.addCollider(bbox)
                 if collision: section.removeKeys(bbox)
                 self.group.append(newPoly)
-                
+                cmds.select( clear=True )
 
             sectionList = []
             if child.childCount() > 0: #Create section and tree for new poly
@@ -166,7 +188,17 @@ class randomizer(object):
                     self.processSection(newSection) #Recursion
                 
             cmds.refresh()
-        
+            QtCore.QCoreApplication.processEvents()
+            if self.trackedPoly == children[0].parent().poly:
+                self.UI.progressBar.setValue(lenKeyList - len(section.keyList))
+                
+
+            if  not (self.UI.isRunning): 
+                self.groupItems()
+                return
+                
+        del(section)
+        #self.trackedPoly = None
         self.groupItems()
         
 
@@ -176,7 +208,9 @@ class randomizer(object):
     
 
     def groupItems(self):
-        if len(self.group) > 0:cmds.group(self.group)
+        if len(self.group) > 0:
+            g = cmds.group(self.group)
+            cmds.parent(g, world=True )
         self.group = []
 
 
