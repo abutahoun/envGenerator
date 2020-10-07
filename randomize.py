@@ -13,14 +13,15 @@ from PySide2 import QtCore
 
 
 class randomizer(object):
-    def __init__(self, widgetItem, globalSettings):
+    def __init__(self, widgetItem, globalSettings,baseIndex):
+        
         self.widgetItem = widgetItem
         self.globalSettings = globalSettings
-
+        self.baseIndex = baseIndex
         self.accuracy = widgetItem.settings.accuracy
         self.sampleSize = widgetItem.settings.sampleSize
 
-        self.useTexture = globalSettings.useTexture
+        
         self.colorThreshold = globalSettings.colorThreshold
         self.group = []
 
@@ -30,8 +31,14 @@ class randomizer(object):
         self.UI.isRunning = True
 
         self.trackedPoly = None
+        self.groups = []
 
         self.processSection(section)
+        
+        self.UI.cancel_btn.setVisible(False)
+        self.UI.generate_btn.setVisible(True)
+        self.finalize()
+        
         
 
     
@@ -61,7 +68,7 @@ class randomizer(object):
         choice = numpy.random.choice(children)
 
         if not section.poly == []:
-            section = segments.getsegments(section.poly ,self.accuracy, self.sampleSize,self.useTexture,self.colorThreshold)[0]
+            section = segments.getsegments(section.poly ,self.accuracy, self.sampleSize,tree.useTexture,self.colorThreshold)[0]
 
 
 
@@ -82,7 +89,9 @@ class randomizer(object):
 
 
         mode = children[0].parent().settings.mode
-        #ToDo remove hardcode for Mode
+        accuracy = children[0].parent().settings.accuracy
+        sampleSize = children[0].parent().settings.sampleSize
+        useTexture = children[0].useTexture
  
         if mode == 1:
             section.sort()
@@ -96,8 +105,9 @@ class randomizer(object):
         Timer_collision = 0.0
         lenKeyList = len(section.keyList)
 
-
+        i = 1
         while len(section.keyList) > 0:
+            QtCore.QCoreApplication.processEvents()
             child = numpy.random.choice(children)
             if child.isItem:
                 poly = child.poly
@@ -105,9 +115,11 @@ class randomizer(object):
                 rotate = child.parent().settings.rotate
                 collision = child.parent().settings.collision
                 fast = child.parent().settings.fast
+                useNormals = child.settings.useNormals
                 #cmds.timer( s=True, n="d" )
 
-                newPoly = cmds.duplicate(poly)[0]
+                newPoly = cmds.duplicate(poly,rc = 1,n = "{0}_{1}_{2}".format(poly,self.baseIndex,i))[0]
+                i += 1
                 cmds.makeIdentity(newPoly, apply = True, t=1, r=1, s=1)
                 #Timer_collision += cmds.timer( e=True, n="d" )
 
@@ -130,7 +142,7 @@ class randomizer(object):
 
                 
                 rand = None
-                #cmds.timer( s=True, n="c" )
+                #delete 
                 if collision:
                     if mode == 0:
                         if not fast:
@@ -138,7 +150,7 @@ class randomizer(object):
 
                             if len(safeList) < 1: 
                                 cmds.delete(newPoly)
-                                self.groupItems()
+                                self.finalize()
                                 break
                             rand = numpy.random.choice(safeList)        #Random segment key from safeList
                         else:
@@ -165,7 +177,9 @@ class randomizer(object):
 
                 #cmds.move(bbox[3],bbox[1], bbox[5], '%s.scalePivot' % mesh,"%s.rotatePivot"% mesh, ws=True) #Move Pivot
                 cmds.move(segment.location[0],segment.location[1],segment.location[2],newPoly,ws = 1,rpr=1)
-                cmds.rotate(segment.rotation[0],segment.rotation[1],segment.rotation[2],newPoly,r=1)
+
+                if useNormals:
+                    cmds.rotate(segment.rotation[0],segment.rotation[1],segment.rotation[2],newPoly,r=1)
 
                 #recalculate Bounding Box
                 bbox = cmds.exactWorldBoundingBox(newPoly)
@@ -175,9 +189,10 @@ class randomizer(object):
                 cmds.select( clear=True )
 
             sectionList = []
+            
             if child.childCount() > 0: #Create section and tree for new poly
-                if child.settings.useTexture:
-                    sectionList = segments.getsegments(newPoly,self.accuracy,self.sampleSize,self.useTexture,self.colorThreshold)
+                if useTexture:
+                    sectionList = segments.getsegments(newPoly,accuracy,sampleSize,useTexture,self.colorThreshold)
                     for colorSection in sectionList:
                         for j in range (child.childCount()):
                             if colorSection.color == child.child(j).color: 
@@ -188,7 +203,7 @@ class randomizer(object):
                     self.processSection(newSection) #Recursion
                 
             cmds.refresh()
-            QtCore.QCoreApplication.processEvents()
+            
             if self.trackedPoly == children[0].parent().poly:
                 self.UI.progressBar.setValue(lenKeyList - len(section.keyList))
                 
@@ -209,10 +224,21 @@ class randomizer(object):
 
     def groupItems(self):
         if len(self.group) > 0:
-            g = cmds.group(self.group)
-            cmds.parent(g, world=True )
-        self.group = []
+            self.groups.append(self.group)
+            self.group = []
 
+    def finalize(self):
+        groups = []
+        for group in self.groups:
+            g = cmds.group(group,n="evnGen")
+            groups.append(g)
+
+        g = cmds.group(groups,n="evnGen")
+        try:
+            cmds.parent(g, world=True )
+        except:
+            pass
+  
 
 
 

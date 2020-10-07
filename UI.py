@@ -38,9 +38,8 @@ class envGenUI(QtWidgets.QWidget):
 
     def __init__(self):
         super(envGenUI,self).__init__()
-
         self.setObjectName(self.__class__.UI_NAME)
-        self.setMinimumSize(400,700)
+        self.setMinimumSize(600,700)
 
 
         self.createWidgets()
@@ -48,7 +47,7 @@ class envGenUI(QtWidgets.QWidget):
         self.createConnection()
         self.createWorkspaceControl()
 
-        self.globalSettings = self.GlobalSettings(1,10,True,10,True)
+        self.globalSettings = self.GlobalSettings(1,10,False,10,True)
 
         self.loadingItems = False
         self.isRunning = False
@@ -61,7 +60,7 @@ class envGenUI(QtWidgets.QWidget):
         self.generate_btn = QtWidgets.QPushButton("Generate")
         self.cancel_btn = QtWidgets.QPushButton("Cancel")
 
-
+        self.cancel_btn.setVisible(False)
 
         #TreeWidget
         
@@ -82,7 +81,7 @@ class envGenUI(QtWidgets.QWidget):
         self.gs_Collision = QtWidgets.QCheckBox("Collision Detection")
 
 
-        self.gs_UseTexture.setChecked(True)
+        self.gs_UseTexture.setChecked(False)
         self.gs_Collision.setChecked(True)
         self.gs_colorThreshold.setValue(10)
 
@@ -105,6 +104,9 @@ class envGenUI(QtWidgets.QWidget):
 
         self.settings_fastCollision = QtWidgets.QCheckBox("Fast Collision Detection")
         self.settings_fastCollision.setChecked(True)
+
+        self.settings_normals = QtWidgets.QCheckBox("Follow Normals")
+        self.settings_normals.setChecked(True)
 
         self.settings_Accuracy.setSingleStep(0.1)
         self.settings_Accuracy.setValue(1)
@@ -203,7 +205,7 @@ class envGenUI(QtWidgets.QWidget):
         gnTreeBox.addWidget(self.genTree)
         group_genTree = QtWidgets.QGroupBox()
         group_genTree.setLayout(gnTreeBox)
-        group_genTree.setMinimumHeight(600) #set GenTree Height
+        group_genTree.setMinimumHeight(850) #set GenTree Height
 
         #Item_Settings
 
@@ -222,6 +224,8 @@ class envGenUI(QtWidgets.QWidget):
         settingForm_layout.addRow("",box_itemSettings_1)
         settingForm_layout.addRow("",self.settings_collision)
         settingForm_layout.addRow("",self.settings_fastCollision)
+        settingForm_layout.addRow("",self.settings_normals)
+        
 
         setting_Layout.addLayout(settingForm_layout)
 
@@ -346,6 +350,7 @@ class envGenUI(QtWidgets.QWidget):
         self.settings_Sample.valueChanged.connect(self.itemSettingsChanged)
         self.settings_collision.toggled.connect(self.itemSettingsChanged)
         self.settings_fastCollision.toggled.connect(self.itemSettingsChanged)
+        self.settings_normals.toggled.connect(self.itemSettingsChanged)
 
     def createWorkspaceControl(self):
         self.workspaceControlInstance = controller(self.getWorksapceControlName())
@@ -357,16 +362,26 @@ class envGenUI(QtWidgets.QWidget):
 
 #region Slots
     def generate(self):
+        
 
         #loop through top level items
         for i in range (self.genTree.topLevelItemCount()):
-            
+            self.progressBar.setValue(0)
+            self.generate_btn.setVisible(False)
+            self.cancel_btn.setVisible(True)
             widgetItem = self.genTree.topLevelItem(i)
             treeLabel = self.genTree.itemWidget(widgetItem,0)
-            randomizer(widgetItem, self.globalSettings)
-    
+            randomizer(widgetItem, self.globalSettings,i)
+        
+        self.generate_btn.setVisible(True)
+        self.cancel_btn.setVisible(False)
+  
     def cancel(self):
         self.isRunning = False
+        self.generate_btn.setVisible(True)
+        self.cancel_btn.setVisible(False)
+    
+        self.progressBar.setRange(0,0)
 
 
     def globalSettingsChanged(self):
@@ -399,6 +414,7 @@ class envGenUI(QtWidgets.QWidget):
             item.settings.sampleSize = self.settings_Sample.value()
             item.settings.collision = self.settings_collision.isChecked()
             item.settings.fast = self.settings_fastCollision.isChecked()
+            item.settings.useNormals = self.settings_normals.isChecked()
             
             rotate = []
             scale = []
@@ -421,6 +437,7 @@ class envGenUI(QtWidgets.QWidget):
         self.settings_Sample.setValue(item.settings.sampleSize)
         self.settings_collision.setChecked(item.settings.collision)
         self.settings_fastCollision.setChecked(item.settings.fast)
+        self.settings_normals.setChecked(item.settings.useNormals)
 
         for i in range(6):
             self.spinBox_R[i].setValue(item.settings.rotate[i])

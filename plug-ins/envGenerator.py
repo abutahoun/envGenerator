@@ -38,8 +38,12 @@ class envGenratorCmd(om.MPxCommand):
     def doIt(self,args):
         
         envGenratorCmd.POLY = args.asString(0)
-        segmentDraw.MODE = args.asInt(1)
-        section = envGen.segments.getsegments(envGenratorCmd.POLY,1,False)[0]
+        accuracy = args.asInt(1)
+        sample = args.asInt(2)
+        useTexture = args.asInt(3)
+        threshold = args.asInt(4)
+
+        section = envGen.segments.getsegments(envGenratorCmd.POLY,accuracy,sample,useTexture,threshold)[0]
         segmentDraw.segments = section.segments
         cmds.createNode("segmentNode")
         
@@ -57,7 +61,7 @@ def printHello():
 
 class segmentDraw(omr.MPxDrawOverride):
     NAME = "segmentDraw"
-    MODE = 0
+    MODE = 1
     segments = []
     parent = ""
     def __init__(self, obj):
@@ -77,7 +81,7 @@ class segmentDraw(omr.MPxDrawOverride):
         path = path.split("|")
         transform = path[len(path)-1]
 
-
+        print "Points Count: {0}".format(len(segmentDraw.segments))
 
         draw_manager.beginDrawable()
         

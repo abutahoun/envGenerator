@@ -78,31 +78,31 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 for item in sel:
                     poly = str(item)
                     if cnt.isGroup(item):
-                        newRow = self.TreeWidgetItem(poly=poly,isGroup =True,settings = self.Settings(accuracy,sampleSize,collision,useTexture,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True))
+                        newRow = self.TreeWidgetItem(poly=poly, useTexture = useTexture, isGroup =True,settings = self.Settings(accuracy,sampleSize,collision,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True,True))
 
                     else:
                         if useTexture:
                             sections = envGen.segments.getsegments(poly,accuracy,sampleSize,useTexture,colorThreshold)
 
-                        newRow = self.TreeWidgetItem(poly=poly, settings = self.Settings(accuracy,sampleSize,collision,useTexture,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True))
+                        newRow = self.TreeWidgetItem(poly=poly, useTexture = useTexture, settings = self.Settings(accuracy,sampleSize,collision,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True,True))
 
-                        if len(rows) == 0:
-                            self.insertTopLevelItem(0,newRow)
-                            newRow.isItem = False
+                    if len(rows) == 0:
+                        self.insertTopLevelItem(0,newRow)
+                        newRow.isItem = False
+                        polyItem_label = self.TreeLabel(poly,newRow)
+                        self.setItemWidget(newRow,0,polyItem_label)
+                    else:
+                        for row in rows:
+                            newRow = self.TreeWidgetItem(poly=poly, useTexture = useTexture, isGroup=cnt.isGroup(item),settings = self.Settings(accuracy,sampleSize,collision,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True,True))
+                            row.addChild(newRow)
+                            if len(sections) > 1:
+                                newRow.useTexture = True
+                            else:
+                                newRow.useTexture = False
+
                             polyItem_label = self.TreeLabel(poly,newRow)
                             self.setItemWidget(newRow,0,polyItem_label)
-                        else:
-                            for row in rows:
-                                newRow = self.TreeWidgetItem(poly=poly, isGroup=cnt.isGroup(item),settings = self.Settings(accuracy,sampleSize,collision,useTexture,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True))
-                                row.addChild(newRow)
-                                if len(sections) > 1:
-                                    newRow.settings.useTexture = True
-                                else:
-                                    newRow.settings.useTexture = False
-
-                                polyItem_label = self.TreeLabel(poly,newRow)
-                                self.setItemWidget(newRow,0,polyItem_label)
-                                del(newRow)
+                                #del(newRow)
 
 
                     if len(sections) > 1:
@@ -110,7 +110,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
                         for section in sections:
 
                             color = QtGui.QColor(section.color)
-                            colorRow = self.TreeWidgetItem(section.segments,isItem = False,color =color,settings = self.Settings(accuracy,sampleSize,collision,useTexture,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True))
+                            colorRow = self.TreeWidgetItem(section.segments, useTexture = useTexture, isItem = False,color =color,settings = self.Settings(accuracy,sampleSize,collision,0,[0,0,0,0,0,0],[0,0,0,0,0,0],True,True))
                             colorRow.setBackgroundColor(0,color)
                             colorLabel =self.TreeLabel("",colorRow,tree=self)
                             colorLabel.setMargin(10)
@@ -131,7 +131,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
 
 
         class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
-            def __init__(self,segments=[],isItem = True,poly =None,color = None, isGroup = False,settings = None):
+            def __init__(self,segments=[],isItem = True,poly =None,color = None, isGroup = False,settings = None,useTexture = False):
                 QtWidgets.QTreeWidgetItem.__init__(self)
 
                 if poly is None:
@@ -143,19 +143,19 @@ class TreeWidget(QtWidgets.QTreeWidget):
                 self.settings = settings
                 self.segments = segments
                 self.isGroup = isGroup
-
+                self.useTexture = useTexture
 
 
         class Settings(object):
-            def __init__(self,accuracy,sampleSize,collision,useTexture,mode,rotate,scale,fast):
+            def __init__(self,accuracy,sampleSize,collision,mode,rotate,scale,fast,useNormals):
                 self.accuracy = accuracy
                 self.sampleSize = sampleSize
                 self.mode = mode
                 self.scale = scale
                 self.rotate = rotate
                 self.collision = collision
-                self.useTexture = useTexture
                 self.fast = fast
+                self.useNormals = useNormals
 
 
         class TreeLabel(QtWidgets.QLabel):
@@ -184,6 +184,10 @@ class TreeWidget(QtWidgets.QTreeWidget):
                     contextMenu.addAction(add_action)
                     add_action.triggered.connect(self.row.treeWidget().addItem)
 
+                    preview_action = QtWidgets.QAction('Preview Points', self)
+                    contextMenu.addAction(preview_action)
+                    preview_action.triggered.connect(self.previewPoints)
+
                 deleteAction = QtWidgets.QAction('Delete', self)
                 contextMenu.addAction(deleteAction)
                 deleteAction.triggered.connect(partial(self.deleteItem,self.row))
@@ -206,4 +210,8 @@ class TreeWidget(QtWidgets.QTreeWidget):
                     else:
                         parent = row.parent()
                         parent.removeChild(row)
+
+            def previewPoints(self):
+                row = self.tree.selectedItems()[0]
+                cmds.drawsegments(row.poly,row.settings.accuracy,row.settings.sampleSize,False,0)
 
