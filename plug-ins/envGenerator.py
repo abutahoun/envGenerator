@@ -90,7 +90,8 @@ class segmentDraw(omr.MPxDrawOverride):
                 draw_manager.point(om.MPoint(s.location))
         else:
             for s in segmentDraw.segments:
-                endPoint = [s.location[0]+s.normal[0], s.location[1]+s.normal[1], s.location[2]+s.normal[2]]
+                normals = s.normal * 10
+                endPoint = [s.location[0]+normals[0], s.location[1]+normals[1], s.location[2]+normals[2]]
                 draw_manager.line(om.MPoint(s.location), om.MPoint(endPoint))
 
         draw_manager.endDrawable()
